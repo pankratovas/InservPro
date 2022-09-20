@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
-    <title>Inservpro</title>
+    <meta charset="utf-8">
+    <title><%=t :app_name %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -10,7 +11,24 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body id="<%=controller.controller_name%>_<%=controller.action_name%>">
+    <div id='current_page'
+         data-controller="<%= controller.controller_name %>"
+         data-action="<%= controller.action_name %>">
+    </div>
+    <div id='current_user'
+         data-user_id="<%= current_user.id if current_user %>"
+         data-role_id="<%= current_user.role_id if current_user %>">
+    </div>
+    <% if current_user %>
+      <%= render 'layouts/navbar' %>
+      <%= render 'layouts/content' %>
+      <%= render 'layouts/modal'%>
+      <%= render 'layouts/footer' %>
+    <% else %>
+      <%= render 'layouts/login' %>
+      <%#= render 'layouts/footer'%>
+    <% end %>
   </body>
+
 </html>

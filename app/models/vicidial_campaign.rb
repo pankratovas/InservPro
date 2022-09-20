@@ -1,4 +1,4 @@
-class VicidialCampaign < VicidialRecord
+class VicidialCampaign < Vicidial
   self.table_name = "vicidial_campaigns"
   self.primary_key = "campaign_id"
 

@@ -1,0 +1,16 @@
+<div class="card" id="login-box">
+  <div class="card-header">
+    <h4><%=t :app_name %></h4>
+  </div>
+  <div class="card-body">
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+      <div class="mb-3">
+        <%= f.email_field :email, autofocus: true, class: "form-control", placeholder: t(:email) %>
+      </div>
+      <div class="mb-3">
+        <%= f.password_field :password, autocomplete: "off", class: "form-control", placeholder: t(:password) %>
+      </div>
+      <%= f.submit t(:sign_in), class: "btn btn-primary form-control" %>
+    <% end %>
+  </div>
+</div>

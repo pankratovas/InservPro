@@ -1,0 +1,11 @@
+ru:
+  app_name: "InservPro 3.0"
+  
+  email: "Электронная почта"
+  password: "Пароль"
+  sign_in: "Вход"
+  
+  "true": "Да"
+  "false": "Нет"
+  at: "в"
+  from_ip: "c ip"

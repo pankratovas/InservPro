@@ -1,0 +1,8 @@
+<br>
+<div class="container-fluid"><div class="row"><div class="col"><p>&copy; 2012-<%= Time.current.year %> InservPro</p></div></div></div>
+<br>
+<% if current_user && current_user.id == 1 %>
+    <ul>
+        <li>PARAMS: <%= params %></li>
+    </ul>
+<% end %>

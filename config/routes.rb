@@ -1,6 +1,19 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  scope "/inservpro" do
 
-  # Defines the root path route ("/")
-  root "pages#index"
+    devise_for :users
+    resources :users, except: [:destroy]
+
+    resources :roles, except: [:show, :destroy]
+    resources :reports, only: [:show] do
+      match 'drop_list', to: 'reports#drop_list', via: 'get'
+      match 'drop_callback_action', to: 'reports#drop_callback_action', via: 'get'
+      match 'realtime_statistics', to: 'reports#realtime_statistics', via: 'get'
+    end
+
+    devise_scope :user do
+      root to: "devise/sessions#new"
+    end
+
+  end
 end
