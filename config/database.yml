@@ -1,0 +1,35 @@
+
+default: &default
+  adapter: mysql2
+  encoding: utf8
+  collation: utf8_general_ci
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  port: 3306
+
+
+development:
+  primary:
+    <<: *default
+    database: inservpro_dev
+    host: localhost
+    username: root
+    password: 376cat
+  vicidial:
+    <<: *default
+    database: asterisk
+    host: 10.78.9.155
+    username: rails_user
+    password: rail$!pa$$w0rd11
+    database_tasks: false
+
+
+test:
+  <<: *default
+  database: inservpro_test
+
+
+production:
+  <<: *default
+  database: inservpro
+  username: inservpro
+  password: <%= ENV["INSERVPRO_DATABASE_PASSWORD"] %>
