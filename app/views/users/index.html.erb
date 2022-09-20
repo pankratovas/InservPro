@@ -1,0 +1,77 @@
+<%= javascript_pack_tag 'users_index', 'data-turbolinks-track': 'reload' %>
+<br>
+<div class="row">
+  <div class="form-group col">
+    <div class="btn-group" role="group">
+      <%= link_to(new_user_path, class: "btn btn-primary btn-label-left") do %>
+        <span><i class="fas fa-user"></i></span>
+        Добавить пользователя
+      <% end %>
+    </div>
+  </div>
+  <div class="col">
+    <div class="text-right">
+      <button type="button" class="btn btn-outline-info btn-label-left" data-toggle="modal" data-target="#userSearchFilter">
+        <span><i class="fas fa-search"></i></span>
+        Поиск по фильтру
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <h5 class="card-header"><i class="fas fa-users"></i> Пользователи</h5>
+            <div class="card-body">
+                <table class="table table-bordered table-hover" id="tblIndexUsers">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Фамилия</th>
+                            <th>Имя</th>
+                            <th>Отчество</th>
+                            <th>Роль</th>
+                            <th>Email</th>
+                            <th>SIP номер</th>
+                            <th>Вход разрешен</th>
+                            <th>Последний вход</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% @users.each do |user| %>
+                            <tr>
+                                <td><%= link_to user.id, edit_user_path(user) %></td>
+                                <td><%= user.last_name %></td>
+                                <td><%= user.first_name %></td>
+                                <td><%= user.middle_name %></td>
+                                <td><%= user.role.name %></td>
+                                <td><%= user.email %></td>
+                                <td><%= user.sip_number %></td>
+                                <td><%=t user.activated.to_s %></td>
+                                <td><%= user.last_login %></td>
+                            </tr>
+                        <% end %>
+                    </tbody>
+                </table>
+                <%= will_paginate(@users) %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userSearchFilter" tabindex="-1" role="dialog" aria-labelledby="userSearchFilterTitle">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userSearchFilterTitle"><i class="fas fa-search"></i> Найти пользователя</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <%= render 'filter' %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

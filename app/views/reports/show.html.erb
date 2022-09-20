@@ -1,0 +1,38 @@
+<%= hidden_field_tag "report_id", @report.id, id: "report_id" %>
+<% unless [100].include?(@report.id) %>
+  <br><%= render @layout+"_filter" %>
+<% end %>
+<br>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col">
+                        <h5><%= @report.description %></h5>
+                    </div>
+                    <div class="col">
+                        <div class="text-right">
+                            <% unless [100].include?(@report.id) %>
+                                <%
+                                    unless @filter.nil?
+                                        @filter = @filter.permit!
+                                    else
+                                        @filter = nil
+                                    end
+                                %>
+                                <%= link_to(report_path(format: "xls", filter: @filter), class: "btn btn-outline-secondary btn-label-left") do %>
+                                    <span><i class="far fa-file-excel"></i></span>
+                                    Вывод в XLS
+                                <% end %>
+                            <% end %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <%= render @layout %>
+            </div>
+        </div>
+    </div>
+</div>

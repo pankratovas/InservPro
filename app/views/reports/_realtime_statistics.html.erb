@@ -1,0 +1,132 @@
+<% 
+@in_calls = VicidialLiveCall.in_calls(current_user)
+@out_calls = VicidialLiveCall.out_calls(current_user)
+@agents = VicidialLiveAgent.all.order(:status)
+@busy_agents =  @agents.count - @agents.where("status IN ('READY','CLOSER')").count
+%>
+<p>
+  <h6>Операторы КЦ:</h6>
+</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th colspan="7">
+        <span class="badge badge-pill badge-primary" style="font-size: 12px;">Всего операторов: <%= @agents.count %></span>
+        <span class="badge badge-pill badge-success" style="font-size: 12px;">Свободно: <%= @agents.count - @busy_agents %></span>
+        <span class="badge badge-pill badge-danger" style="font-size: 12px;">Занято:  <%= @busy_agents %></span>
+      </th>
+    </tr>
+    <tr>
+      <th>Оператор</th>
+      <th>ID оператора</th>
+      <th>SIP оператора</th>
+      <th>Статус</th>
+      <th>Время в текущем статусе</th>
+      <th>Отвечено</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @agents.each do |agent| %>
+      <% 
+        @status = detect_agent_status(agent)
+        @status_name = status_name(@status)
+        @status_time = detect_status_time(agent, @status)
+        if @status_name == 'Разговор'
+          @query = "SELECT campaign_id FROM vicidial_closer_log WHERE uniqueid = '#{agent.uniqueid}' ORDER BY start_epoch DESC"
+          @ingroup = VicidialLiveAgent.find_by_sql(@query).first
+          if @status_time.to_time > "00:05:00".to_time
+            @style = "background: rgba(216,56,234,1);"
+          else
+            @style = row_color(@status)
+          end
+        else
+          @style = row_color(@status)
+        end
+      %>
+      <tr style="<%= @style %>">
+        <td><%= VicidialUser.where(user: agent.user).first.full_name %></td>
+        <td><%= agent.user %></td>
+        <td><%= agent.extension %></td>
+        <td>
+          <%= @status_name %>
+          <% if @status_name == 'Пауза' %>
+            (<%= pause_code(agent.pause_code) %>)
+          <% end %>
+          <% if @status_name == 'Разговор' %>
+            (<%= @ingroup.nil? ? '-': VicidialInboundGroup.where(group_id: @ingroup).first.group_name %>)
+          <% end %>
+        </td>
+        <td>
+          <%= @status_time %>
+        </td>
+        <td><%= agent.calls_today %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p>
+  <h6>Очередь входящих вызовов КЦ:</h6>
+</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th colspan="6">
+        <span class="badge badge-pill badge-primary" style="font-size: 12px;">Всего вызовов: <%= @in_calls.count %></span>
+      </th>
+    </tr>
+    <tr>
+      <th>Линия</th>
+      <th>Время вызова</th>
+      <th>Статус</th>
+      <th>Номер телефона</th>
+      <th>Время в текущем статусе</th>
+      <th>Позиция в очереди</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @in_calls.each do |call| %>
+    <tr class="<%= %>">
+      <td><%= call.campaign_id == 'CALLMENU' ?  'Голосовое меню' : VicidialInboundGroup.where(group_id: call.campaign_id).first.group_name %></td>
+      <td><%= call.call_time.utc.strftime("%d.%m.%Y  %H:%M:%S") %></td>
+      <td><%= status_cname(call.status) %></td>
+      <td><%= call.phone_number %></td>
+      <td>
+        <%= call.campaign_id == 'CALLMENU' ?  seconds_to_hms((Time.now-call.call_time+3.hour).round(0)) : seconds_to_hms((call.last_update_time - call.call_time).round(0)) %>
+      </td>
+      <td><%= call.queue_position %></td>
+    </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p>
+  <h6>Очередь исходящих вызовов КЦ:</h6>
+</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th colspan="5">
+        <span class="badge badge-pill badge-primary" style="font-size: 12px;">Всего вызовов: <%= @out_calls.count %></span>
+      </th>
+    </tr>
+    <tr>
+      <th>Время вызова</th>
+      <th>Статус</th>
+      <th>Номер телефона</th>
+      <th>Время в текущем статусе</th>
+      <th>Позиция в очереди</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @out_calls.each do |call| %>
+      <tr class="<%= %>">
+        <td><%= call.call_time.utc.strftime("%d.%m.%Y  %H:%M:%S") %></td>
+        <td><%= status_cname(call.status) %></td>
+        <td><%= call.phone_number %></td>
+        <td><%= seconds_to_hms((call.last_update_time - call.call_time).round(0)) %></td>
+        <td><%= call.queue_position %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

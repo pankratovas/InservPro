@@ -1,0 +1,28 @@
+<% 
+  @statuses = @result[1]
+  @result = @result[0]
+%>
+<table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
+  <thead class="thead-light">
+    <tr>
+      <th>Регион</th>
+      <% @statuses.each do |s| %>
+        <th><%= s.status %></th>
+      <% end %>
+      <th>Прочие коды</th>
+      <th>Общее количество</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result.each do |key, val| %>
+      <tr>
+        <td><%= key %></td>
+        <% @statuses.each do |s| %>
+          <td><%= @result[key][s.status.to_sym] %></td>
+        <% end %>
+        <td><%= @result[key][:total] - (@result[key].values.sum-@result[key][:total]) %></td>
+        <th><%= @result[key][:total] %></th>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

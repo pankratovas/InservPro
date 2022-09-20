@@ -1,0 +1,18 @@
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th>Линия</th>
+      <th>Регион</th>
+      <th>Число обращений</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result.each do |row| %>
+    <tr>
+      <td><%= row.campaign_id %></td>
+      <td><%= row.region_name %></td>
+      <td><%= row.count %></td>
+    </tr>
+    <% end %>
+  </tbody>
+</table>

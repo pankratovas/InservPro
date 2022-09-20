@@ -1,0 +1,65 @@
+<%
+if params[:filter].blank? || params[:filter][:start_date].blank?
+  @start_date = I18n.localize(Time.now.beginning_of_day, format: '%d %b %Y %H:%M')
+else
+  @start_date = I18n.localize(params[:filter][:start_date].to_time, format: '%d %b %Y %H:%M')
+end
+if params[:filter].blank? || params[:filter][:stop_date].blank?
+  @stop_date = I18n.localize(Time.now.end_of_day, format: '%d %b %Y %H:%M' )
+else
+  @stop_date = I18n.localize(params[:filter][:stop_date], format: '%d %b %Y %H:%M' )
+end
+operators = {}
+VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
+%>
+<p>Статистика по операторам с <b><%= @start_date %></b> по <b><%= @stop_date %></b>:</p>
+<table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
+  <thead class="thead-light">
+    <tr>
+        <th>Оператор</th>
+        <th>Количество принятых вызовов</th>
+        <th>Количество исходящих вызовов</th>
+        <th>Количество разговоров больше 5 мин</th>
+        <th>Максимальное время в разговоре</th>
+        <th>Среднее время в разговоре (продолжительность разговора)</th>
+        <th>Первым прервал соединение, количество раз</th>
+        <th>Количество совершенных переводов всего</th>
+        <th>Количество совершенных переводов внутри колл-центра</th>
+        <th>Общее время в системе</th>
+        <th>Время в разговоре</th>
+        <th>Время на паузе всего</th>
+        <th>Время на паузе Обед</th>
+        <th>Время на паузе Плановый перерыв</th>
+        <th>Время на паузе Опрос граждан</th>
+        <th>Время на паузе Внесение данных</th>
+        <th>Время на паузе Обучение</th>
+        <th>Время на паузе в статусе Постобработка</th>
+        <th>Эффективность работы</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result.keys.each do |oper| %>
+      <tr>
+          <td><%= operators[oper] %> (<%= oper %>)</td>
+          <td><%= @result[oper][:answered] %></td>
+          <td><%= @result[oper][:outbound] %></td>
+          <td><%= @result[oper][:talk_m5] %></td>
+          <td><%= seconds_to_ms(@result[oper][:max_talk]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:avg_talk]) %></td>
+          <td><%= @result[oper][:term_by_oper] %></td>
+          <td><%= @result[oper][:transfer_total] %></td>
+          <td><%= @result[oper][:transfer_oper] %></td>
+          <td><%= seconds_to_ms(@result[oper][:total_time]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:talk_time]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:pause_time]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:o_pause]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:pp_pause]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:og_pause]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:vd_pause]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:ed_pause]) %></td>
+          <td><%= seconds_to_ms(@result[oper][:dispo_time]) %></td>
+          <td><%= @result[oper][:effectivity] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,6 @@
+<%= javascript_pack_tag 'realtime_report', 'data-turbolinks-track': 'reload' %>
+<% @campaign = @result %>
+<div id="realtime_queue">
+    <%= render 'realtime_statistics', object: @campaign %>
+</div>
+

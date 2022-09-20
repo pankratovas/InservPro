@@ -1,71 +1,51 @@
 <nav class="navbar navbar-expand navbar-dark bg-dark sticky-top">
-  <a class="navbar-brand" href="http://www.in-serv.ru">
-    <img src="/assets/logo.png" width="30" height="30" class="d-inline-block align-top" alt="" loading="lazy">
-    InservPro
-  </a>
-  
-  <div class="collapse navbar-collapse" id="navbarNavDropdown">
-    
-    <% if current_user.role_key == 'super' %>
-      <ul class="navbar-nav">
+  <div class="container-fluid">
+    <!-- Logo -->
+    <a class="navbar-brand" href="http://www.in-serv.ru">
+      <img src="/assets/logo.png" alt="" width="30" height="30" class="d-inline-block align-text-top">
+      InservPro
+    </a>
+    <!-- Nav content -->
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <% if current_user.role_key == 'super' %>
+          <!-- Dropdown menu Management -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Управление
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><%= link_to 'Пользователи', (users_path), {class: "dropdown-item"} %></li>
+              <li><%= link_to 'Роли', (roles_path), {class: "dropdown-item"} %></li>
+            </ul>
+          </li>
+        <% end %>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <i class="fas fa-briefcase"></i>
-            Управление
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Отчеты
           </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <%= link_to (users_path), {class: "dropdown-item"} do %>
-              <i class="fas fa-users"></i>
-              Пользователи
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <% current_user.permitted_reports.each do |r| %>
+              <li><%= link_to r.description, (report_path(r)), class: "dropdown-item" %></li>
             <% end %>
-            <%= link_to (roles_path), {class: "dropdown-item"} do %>
-              <i class="far fa-address-card"></i>
-              Роли
-            <% end %>
-          </div>
+          </ul>
+        </li>
+        <% if current_user.realtime_permit? %>
+          <li class="nav-item">
+            <%= link_to Report.find(100).description, (report_path(100)), class: "nav-link" %>
+          </li>
+        <% end %>
+      </ul>
+      <ul class="navbar-nav navbar-right">
+        <li class="nav-item nav-last">
+          <%= link_to current_user.name, (edit_user_path(current_user.id)), {class: "nav-link"} %>
+        </li>
+        <li class="nav-item nav-last">
+          <%= link_to 'Выйти', (destroy_user_session_path), {class: "nav-link", data: { turbo_method: :delete}} %>
         </li>
       </ul>
-    <% end %>
-    
-    <ul class="navbar-nav">
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-clipboard-list"></i>
-          Отчеты
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-          <% current_user.permitted_reports.each do |r| %>
-            <%= link_to (report_path(r)), class: "dropdown-item" do %>
-              <span><%=t r.description %></span>
-            <% end %>
-          <% end %>
-        </div>
-      </li>
-      <% if current_user.realtime_permit? %>
-          <li class="nav-item">
-              <%= link_to (report_path(100)), class: "nav-link" do %>
-                  <i class="far fa-eye"></i>
-                  <span><%= Report.find(100).description %></span>
-              <% end %>
-          </li>
-      <% end %>
-    </ul>
-    
+    </div>
+
   </div>
-  
-  <ul class="navbar-nav navbar-right">
-    <li class="nav-item nav-last">
-      <%= link_to (edit_user_path(current_user.id)), {class: "nav-link"} do %>
-        <i class="fas fa-user"></i>
-        <%= current_user.name %>
-      <% end %>
-    </li>
-    <li class="nav-item nav-last">
-      <%= link_to (destroy_user_session_path), {class: "nav-link", method: :delete} do %>
-        <i class="fas fa-sign-out-alt"></i>
-        Выйти
-      <% end %>
-    </li>
-  </ul>
   
 </nav>

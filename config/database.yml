@@ -11,7 +11,7 @@ development:
   primary:
     <<: *default
     database: inservpro_dev
-    host: localhost
+    host: 127.0.0.1
     username: root
     password: 376cat
   vicidial:
@@ -24,8 +24,19 @@ development:
 
 
 test:
-  <<: *default
-  database: inservpro_test
+  primary:
+    <<: *default
+    database: inservpro_test
+    host: 127.0.0.1
+    username: root
+    password: 376cat
+  vicidial:
+    <<: *default
+    database: asterisk
+    host: 10.78.9.155
+    username: rails_user
+    password: rail$!pa$$w0rd11
+    database_tasks: false
 
 
 production:

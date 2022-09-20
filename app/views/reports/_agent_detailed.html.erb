@@ -1,0 +1,109 @@
+<%
+if params[:filter].blank? || params[:filter][:start_date].blank?
+  @start_date = I18n.localize(Time.now.beginning_of_day, format: '%d %b %Y %H:%M')
+else
+  @start_date = I18n.localize(params[:filter][:start_date].to_time, format: '%d %b %Y %H:%M')
+end
+if params[:filter].blank? || params[:filter][:stop_date].blank?
+  @stop_date = I18n.localize(Time.now.end_of_day, format: '%d %b %Y %H:%M' )
+else
+  @stop_date = I18n.localize(params[:filter][:stop_date], format: '%d %b %Y %H:%M' )
+end
+operators = {}
+VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
+%>
+<p>Статистика по операторам за период с <b><%= @start_date %></b> по <b><%= @stop_date %></b>:</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th>ID</th>
+      <th>ФИО Оператора</th>
+      <th>Звонки</th>
+      <th>Время</th>
+      <th>Пауза</th>
+      <th>Сред. пауза</th>
+      <th>Ожидание</th>
+      <th>Сред. ожидание</th>
+      <th>Разговор</th>
+      <th>Сред. разговор</th>
+      <th>Обработка</th>
+      <th>Сред. обработка</th>
+      <th>Отбой</th>
+      <th>Сред. отбой</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result[:apd1].keys.each do |sip| %>
+      <tr>
+        <td><%= sip %></td>
+        <td><%= operators[sip] %></td>
+        <td><%= @result[:apd1][sip][:user_calls] %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_time])%></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_pause]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_avg_pause]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_wait]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_avg_wait]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_talk]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_avg_talk]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_dispo]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_avg_dispo]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_dead]) %></td>
+        <td><%= seconds_to_hms(@result[:apd1][sip][:user_avg_dead]) %></td>
+      </tr>
+    <% end %>
+    <tr>
+      <td colspan="2"><b>ИТОГО:</b></td>
+      <td><b><%= @result[:apd1t][:total_calls] %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_time]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_pause]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_avg_pause]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_wait]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_avg_wait]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_talk]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_avg_talk]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_dispo]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_avg_dispo]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_dead]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd1t][:total_avg_dead]) %></b></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Статистика по кодам паузы за период с <b><%= @start_date %></b> по <b><%= @stop_date %></b>:</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th>ID</th>
+      <th>ФИО Оператора</th>
+      <th>Время в системе</th>
+      <th>Вне паузы</th>
+      <th>На паузе</th>
+      <% @result[:codes].each do |pc| %>
+        <th><%= pc.nil? ? 'Без кода' : pause_code(pc) %></th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result[:apd2].keys.each do |sip| %>
+      <tr>
+        <td><%= sip %></td>
+        <td><%= operators[sip] %></td>
+        <td><%= seconds_to_hms(@result[:apd2][sip][:user_time]) %></td>
+        <td><%= seconds_to_hms(@result[:apd2][sip][:user_nonpause]) %></td>
+        <td><%= seconds_to_hms(@result[:apd2][sip][:user_pause]) %></td>
+        <% @result[:codes].each do |pc| %>
+          <td><%= seconds_to_hms(@result[:apd2][sip][pc]) %></td>
+        <% end %>
+      </tr>
+    <% end %>
+    <tr>
+      <td colspan="2"><b>ИТОГО:</b></td>
+      <td><b><%= seconds_to_hms(@result[:apd2t][:total_time]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd2t][:total_pause]) %></b></td>
+      <td><b><%= seconds_to_hms(@result[:apd2t][:total_nonpause]) %></b></td>
+      <% @result[:codes].each do |pc| %>
+        <td><b><%= seconds_to_hms(@result[:apd2t][pc]) %></b></td>
+      <% end %>
+    </tr>
+  </tbody>
+</table>

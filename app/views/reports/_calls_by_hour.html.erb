@@ -1,0 +1,73 @@
+<% @intervals = @result.keys %>
+<table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
+  <thead class="thead-light">
+    <tr>
+      <th>Параметр</th>
+      <% @intervals.each do |i| %>
+        <th><%= i %></th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Минимальное время ожидания</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:min_queue] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Среднее время ожидания</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:avg_queue] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Максимальное время ожидания</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:max_queue] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Время ожидания 0-3 минут</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:queue_0_3] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Время ожидания 3-6 минут</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:queue_3_6] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Время ожидания более 6 минут</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:queue_m6] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Среднее время обработки вызова</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:avg_talk] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Количество поступивших вызовов</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:total_calls] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Количество принятых вызовов</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:answered] %></td>
+      <% end %>
+    </tr>
+    <tr>
+      <td>Эффективность работы</td>
+      <% @intervals.each do |i| %>
+        <td><%= @result[i][:effectivity] %></td>
+      <% end %>
+    </tr>
+  </tbody>
+</table>

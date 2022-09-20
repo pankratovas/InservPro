@@ -1,7 +1,7 @@
 ROLES = Role.create([
                       {name: "Администратор",
                        permissions: {
-                         role: super,
+                         role: 'super',
                          campaigns: [],
                          ingroups: [],
                          reports: []

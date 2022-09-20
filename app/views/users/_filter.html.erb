@@ -1,0 +1,31 @@
+<%= form_tag users_path, method: :get, class: "form" do %>
+  
+  <div class="form-group">
+    <%= label_tag :first_name, "Имя", class: "control-label" %>
+    <%= text_field_tag  "[filter][first_name]", nil, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label_tag :middle_name, "Отчество", class: "control-label" %>
+    <%= text_field_tag  "[filter][middle_name]", nil, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label_tag :last_name, "Фамилия", class: "control-label" %>
+    <%= text_field_tag  "[filter][last_name]", nil, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label_tag :email, "Email", class: "control-label" %>
+    <%= text_field_tag  "[filter][email]", nil, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label_tag :sip_number, "SIP номер", class: "control-label" %>
+    <%= text_field_tag  "[filter][sip_number]", nil, class: "form-control" %>
+  </div>
+    
+  <div class="text-center">
+    <%= button_tag(type: "submit", class: "btn btn-primary btn-label-left") do %>
+      <span><i class="fas fa-search"></i></span>
+      Искать
+    <% end %>
+  </div>
+  
+<% end %>

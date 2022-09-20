@@ -1,0 +1,83 @@
+<p>Оператор <%= VicidialUser.find_by_user(@result[:user]).full_name %> (<%= @result[:user] %>)</p>
+<table class="table table-bordered table-hover">
+  <thead class="thead-light">
+    <tr>
+      <th>Параметр</th>
+      <th>Значение</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td>Количество принятых вызовов</td>
+        <td><%= @result[:answered] %></td>
+      </tr>
+      <tr>
+        <td>Количество исходящих вызовов</td>
+        <td><%= @result[:outbound] %></td>
+      </tr>
+      <tr>
+        <td>Количество разговоров больше 5 мин</td>
+        <td><%= @result[:talk_m5] %></td>
+      </tr>
+      <tr>
+        <td>Максимальное время в разговоре</td>
+        <td><%= seconds_to_ms(@result[:max_talk]) %></td>
+      </tr>
+      <tr>
+        <td>Среднее время в разговоре (продолжительность разговора)</td>
+        <td><%= seconds_to_ms(@result[:avg_talk]) %></td>
+      </tr>
+      <tr>
+        <td>Первым прервал соединение, количество раз</td>
+        <td><%= @result[:term_by_oper] %></td>
+      </tr>
+      <tr>
+        <td>Количество совершенных переводов всего</td>
+        <td><%= @result[:transfer_total] %></td>
+      </tr>
+      <tr>
+        <td>Количество совершенных переводов внутри колл-центра</td>
+        <td><%= @result[:transfer_oper] %></td>
+      </tr>
+      <tr>
+        <td>Общее время в системе</td>
+        <td><%= seconds_to_ms(@result[:total_time]) %></td>
+      </tr>
+      <tr>
+        <td>Время в разговоре</td>
+        <td><%= seconds_to_ms(@result[:talk_time]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе всего</td>
+        <td><%= seconds_to_ms(@result[:pause_time]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе Обед</td>
+        <td><%= seconds_to_ms(@result[:o_pause]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе Плановый перерыв</td>
+        <td><%= seconds_to_ms(@result[:pp_pause]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе Опрос граждан</td>
+        <td><%= seconds_to_ms(@result[:og_pause]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе Внесение данных</td>
+        <td><%= seconds_to_ms(@result[:vd_pause]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе Обучение</td>
+        <td><%= seconds_to_ms(@result[:ed_pause]) %></td>
+      </tr>
+      <tr>
+        <td>Время на паузе в статусе Постобработка</td>
+        <td><%= seconds_to_ms(@result[:dispo_time]) %></td>
+      </tr>
+      <tr>
+        <td>Эффективность работы</td>
+        <td><%= @result[:effectivity] %></td>
+      </tr>
+  </tbody>
+</table>
