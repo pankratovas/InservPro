@@ -1,87 +1,111 @@
 <%= form_for(@role, html: {class: "form-horizontal", role: "form"}, local: true) do |f| %>
-    
-    <%= render 'layouts/errors' %>
-    
-    <div class="form-row">
-        <div class="form-group col-4">
-            <%= f.label "Название роли" %>
-            <%= f.text_field :name, class: "form-control", id: "name" %>
-        </div>
-        <div class="form-group col-4">
-            <%= f.label "Описание роли" %>
-            <%= f.text_field :description, class: "form-control", id: "description" %>
-        </div>
-        <div class="form-group col-4">
-            <%= f.label "Доступно управление" %>
-            <%= select_tag "role[permissions][role]", options_for_select([['Да', 'super'],['Нет', 'oper']], @role.permissions[:role]), class: "form-control", id: "role_key" %>
-        </div>
+  <%= render 'layouts/errors' %>
+  <div class="row">
+    <div class="col-4">
+      <%= f.label "Название роли", class: "form-label" %>
+      <%= f.text_field :name, class: "form-control", id: "name" %>
     </div>
-    <nav>
-        <div class="nav nav-tabs" id="nav-tab" role="tablist">
-            <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-campaigns" role="tab" aria-controls="nav-campaigns" aria-selected="true">Кампании и ингруппы</a>
-            <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-reports" role="tab" aria-controls="nav-reports" aria-selected="false">Отчеты</a>
-         </div>
-    </nav>
-    
-    <div class="tab-content" id="nav-tabContent">
-        <div class="tab-pane fade show active" id="nav-campaigns" role="tabpanel" aria-labelledby="nav-campaigns-tab">
-            <br>
-            <div class="form-row">
-                <div class="form-group col-12">
-                    <%= f.label "Доступные кампании и ингруппы" %>
+    <div class="col-4">
+      <%= f.label "Описание роли", class: "form-label" %>
+      <%= f.text_field :description, class: "form-control", id: "description" %>
+    </div>
+    <div class="col-4">
+      <%= f.label "Доступно меню 'Управление'", class: "form-label" %>
+      <% if @role.permissions.nil? %>
+        <%= select_tag "role[permissions][role]", options_for_select([['Да', 'super'],['Нет', 'oper']]), class: "form-control", id: "role_key" %>
+      <% else %>
+        <%= select_tag "role[permissions][role]", options_for_select([['Да', 'super'],['Нет', 'oper']], @role.permissions["role"]), class: "form-control", id: "role_key" %>
+      <% end %>
+    </div>
+  </div>
+  <br>
+  <ul class="nav nav-tabs" id="permissionsTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active"
+              id="campaigns-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#campaigns"
+              type="button" role="tab"
+              aria-controls="campaigns"
+              aria-selected="true">
+        <h6>Кампании и ингруппы</h6>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link"
+              id="reports-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#reports"
+              type="button"
+              role="tab"
+              aria-controls="reports"
+              aria-selected="false">
+        <h6>Отчеты</h6>
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="permissionsTabContent">
+    <div class="tab-pane fade show active" id="campaigns" role="tabpanel" aria-labelledby="campaigns-tab">
+      <br>
+      <% VicidialCampaign.all_campaigns.in_groups_of(3, false) do |campaigns| %>
+        <div class="row">
+          <% campaigns.each do |campaign| %>
+            <div class="col-4">
+              <% if @role.permissions.nil? %>
+                <%= check_box_tag "role[permissions][campaigns][]", campaign.campaign_id %>
+              <% else %>
+                <%= check_box_tag "role[permissions][campaigns][]", campaign.campaign_id, @role.permissions["campaigns"].present? ? @role.permissions["campaigns"].include?(campaign.campaign_id) : nil %>
+              <% end %>
+              <a class="btn btn-outline-secondary"
+                 data-bs-toggle="collapse"
+                 href="#collapseCampaign_<%= campaign.campaign_id %>"
+                 role="button"
+                 aria-expanded="false"
+                 aria-controls="collapseCampaign_<%= campaign.campaign_id %>">
+                <%= campaign.campaign_name %>
+              </a>
+              <div class="collapse" id="collapseCampaign_<%= campaign.campaign_id %>">
+                <div class="card card-body">
+                  <% for ingroup in campaign.ingroups %>
+                    <ul>
+                      <li class="list-unstyled">
+                        <% if @role.permissions.nil? %>
+                          <%= check_box_tag "role[permissions][ingroups][]", ingroup.group_id %>
+                        <% else %>
+                          <%= check_box_tag "role[permissions][ingroups][]", ingroup.group_id, @role.permissions["ingroups"].present? ? @role.permissions["ingroups"].include?(ingroup.group_id) : nil %>
+                        <% end %>
+                        <%= ingroup.group_name %>
+                      </li>
+                    </ul>
+                  <% end %>
                 </div>
+              </div>
             </div>
-            <% VicidialCampaign.all_campaigns.in_groups_of(2, false) do |campaigns| %>
-                <div class="form-row">
-                    <% campaigns.each do |campaign| %>
-                        <div class="form-group col-6">
-                            <%= check_box_tag "role[permissions][campaigns][]", campaign.campaign_id, @role.permissions[:campaigns].present? ? @role.permissions[:campaigns].include?(campaign.campaign_id) : nil %>
-                            <a class="btn btn-outline-secondary" data-toggle="collapse" href="#collapseCampaign_<%= campaign.campaign_id %>" role="button" aria-expanded="false" aria-controls="collapseExample">
-                                <%= campaign.campaign_name %>
-                            </a>
-                            <div class="collapse" id="collapseCampaign_<%= campaign.campaign_id %>">
-                                <div class="card card-body">
-                                    <% for ingroup in campaign.ingroups %>
-                                        <ul>
-                                            <li class="list-unstyled">
-                                                <%= check_box_tag "role[permissions][ingroups][]", ingroup.group_id, @role.permissions[:ingroups].present? ? @role.permissions[:ingroups].include?(ingroup.group_id) : nil %>
-                                                <%= ingroup.group_name %>
-                                            </li>
-                                        </ul>
-                                    <% end %>
-                                </div>
-                            </div>
-                        </div>
-                    <% end %>
-                </div>
+          <% end %>
+        </div>
+        <br>
+      <% end %>
+    </div>
+    <div class="tab-pane fade" id="reports" role="tabpanel" aria-labelledby="reports-tab">
+      <br>
+      <% for report in Report.where(activated: true) %>
+        <ul>
+          <li class="list-unstyled">
+            <% if @role.permissions.nil? %>
+              <%= check_box_tag "role[permissions][reports][]", report.id %>
+            <% else %>
+              <%= check_box_tag "role[permissions][reports][]", report.id, @role.permissions["reports"].present? ? @role.permissions["reports"].include?(report.id.to_s) : nil %>
             <% end %>
-        </div>
-        <div class="tab-pane fade" id="nav-reports" role="tabpanel" aria-labelledby="nav-reports-tab">
-            <br>
-            <div class="row">
-                <div class="form-group col-12">
-                  <%= f.label "Доступные отчеты" %>
-                  <% for report in Report.where(activated: true) %>
-                       <ul>
-                           <li class="list-unstyled">
-                               <%= check_box_tag "role[permissions][reports][]", report.id, @role.permissions[:reports].present? ? @role.permissions[:reports].include?(report.id.to_s) : nil %>  
-                               <%= report.description %>
-                           </li>
-                       </ul>
-                   <% end %>
-                </div>
-            </div>
-        </div>
+
+            <%= report.description %>
+          </li>
+        </ul>
+      <% end %>
     </div>
-    <br>
-    <div class="text-center">
-        <%= link_to(roles_path, class: "btn btn-warning btn-label-left") do %>
-            <span><i class="fas fa-ban"></i></span>
-            Отмена
-        <% end %>
-        <%= button_tag(type: 'submit', class: "btn btn-primary btn-label-left") do %>
-            <span><i class="far fa-check-circle"></i></span>
-            Сохранить
-        <% end %>
-    </div>
+  </div>
+  <br>
+  <div class="text-center">
+    <%= link_to('Отмена', roles_path, class: "btn btn-warning btn-label-left") %>
+    <%= button_tag('Сохранить', type: 'submit', class: "btn btn-primary btn-label-left") %>
+  </div>
 <% end %>

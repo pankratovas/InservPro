@@ -1,5 +1,5 @@
 class Role < ApplicationRecord
   has_many  :users
-  serialize :permissions, Hash
+  #serialize :permissions, JSON
 
 end

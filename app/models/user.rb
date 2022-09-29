@@ -54,15 +54,15 @@ class User < ApplicationRecord
   end
 
   def role_key
-    self.role.permissions[:role]
+    self.role.permissions["role"]
   end
 
   def permitted_reports
-    Report.where(id: self.role.permissions[:reports]).where.not(id: 100)
+    Report.where(id: self.role.permissions["reports"]).where.not(id: 100)
   end
 
   def realtime_permit?
-    self.role.permissions[:reports].include?('100')
+    self.role.permissions["reports"].include?('100')
   end
 
 

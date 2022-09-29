@@ -10,15 +10,15 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     if filter.blank? || filter[:ingroup].blank?
-      @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+      @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     else
       @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
     end
@@ -65,6 +65,7 @@ class Report < ApplicationRecord
                      recording_log ON vicidial_closer_log.lead_id = recording_log.lead_id AND vicidial_closer_log.closecallid = recording_log.vicidial_id
               WHERE
                      vicidial_closer_log.call_date BETWEEN '#{@start_date}' AND '#{@stop_date}'"+
+
       @ingroup_query+@operator_query+@status_query+@phone_query+@lead_query+@order_query
     @result = VicidialCloserLog.find_by_sql(@query)
     return @result
@@ -75,15 +76,15 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions[:campaigns].to_s[1..-2]})"
+      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
     else
       @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
     end
@@ -141,24 +142,24 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions[:campaigns].to_s[1..-2]})"
+      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
       if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
       else
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
       end
     else
       @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
       if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions[:ingroups]).to_s[1..-2]})"
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
       else
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
       end
@@ -217,16 +218,16 @@ class Report < ApplicationRecord
   # Быстрая общая статистика вызовов КЦ
   def summary_calls_preset(filter = params[:filter], user)
     if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions[:campaigns].to_s[1..-2]})"
+      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
       if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
       else
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
       end
     else
       @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
       if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions[:ingroups]).to_s[1..-2]})"
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
       else
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
       end
@@ -291,12 +292,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     @query1 = "SELECT
                         COUNT(*) AS 'TotalCalls',
@@ -405,7 +406,7 @@ class Report < ApplicationRecord
       @start_date = (filter[:start_date].to_time.beginning_of_day+8.hours+45.minutes).strftime("%Y-%m-%d %H:%M:%S")
       @stop_date = (filter[:start_date].to_time.beginning_of_day+21.hours).strftime("%Y-%m-%d %H:%M:%S")
     end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     @query1 = "SELECT
                       count(*) AS TotalCalls,
                       SUM(length_in_sec) AS 'TotalLength',
@@ -456,12 +457,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     @query1 = "SELECT user, status, count(*) AS count FROM vicidial_closer_log WHERE call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND user != 'VDCL' GROUP BY user, status ORDER BY status"
     @query2 = "SELECT user, status, count(*) AS count FROM vicidial_log WHERE call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND user != 'VDAD' GROUP BY user, status ORDER BY status"
@@ -478,7 +479,7 @@ class Report < ApplicationRecord
     else
       @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
     end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     data_hash = {}
     time_intervals = ["00:00:00-08:59:59","09:00:00-11:59:59","12:00:00-14:59:59","15:00:00-17:59:59","18:00:00-20:59:59","21:00:00-23:59:59"]
     time_intervals.each do |i|
@@ -523,12 +524,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     if filter.blank? || filter[:operator].blank?
       @operator = VicidialUser.first.user
@@ -606,12 +607,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     data_hash = {}
     VicidialUser.all.order(:full_name).each do |operator|
@@ -688,7 +689,7 @@ class Report < ApplicationRecord
     else
       @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
     end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     data_hash = {}
     time_intervals = ["00:00:00-00:59:59","01:00:00-01:59:59","02:00:00-02:59:59","03:00:00-03:59:59","04:00:00-04:59:59","05:00:00-05:59:59",
                       "06:00:00-06:59:59","07:00:00-07:59:59","08:00:00-08:59:59","09:00:00-09:59:59","10:00:00-10:59:59","11:00:00-11:59:59",
@@ -738,7 +739,7 @@ class Report < ApplicationRecord
     else
       @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
     end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions[:ingroups].to_s[1..-2]})"
+    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     data_hash = {}
     time_intervals = ["00:00:00-08:59:59","09:00:00-17:59:59","18:00:00-23:59:59"]
     time_intervals.each do |i|
@@ -808,12 +809,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     @order_query = " GROUP BY region_name ORDER BY campaign_id, region_name"
     @query = "SELECT t1.campaign_id,
@@ -832,12 +833,12 @@ class Report < ApplicationRecord
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @start_date = filter[:start_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
       @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
     else
-      @stop_date = filter[:stop_date].to_time.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = filter[:stop_date]
     end
     @group_query = "  GROUP BY region_name, status"
     @query1 = "SELECT
