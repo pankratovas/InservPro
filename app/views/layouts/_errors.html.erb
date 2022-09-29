@@ -1,10 +1,10 @@
 <% flash.each do |key, value| %>
-    <% unless value.empty? %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Ошибка!!!</strong> <%= value %>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    <% end %>
+  <% unless value.empty? %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Ошибка!!!</strong> <%= value %>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  <% end %>
 <% end %>

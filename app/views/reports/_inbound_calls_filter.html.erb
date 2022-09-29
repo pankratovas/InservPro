@@ -1,93 +1,75 @@
 <div class="row">
   <div class="col">
-    <div class="text-right">
-      <button type="button" class="btn btn-outline-info btn-label-left" data-toggle="modal" data-target="#SearchFilter">
-        <span><i class="fas fa-search"></i></span>
+    <div class="text-end">
+      <button type="button" class="btn btn-outline-info btn-label-left" data-bs-toggle="modal" data-bs-target="#SearchFilter">
         Поиск по фильтру
       </button>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="SearchFilter" tabindex="-1" role="dialog" aria-labelledby="iSearchFilterTitle">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="SearchFilterTitle"><i class="fas fa-search"></i> Фильтр</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<div class="modal fade" id="SearchFilter" tabindex="-1" role="dialog" aria-labelledby="iSearchFilterTitle" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SearchFilterTitle">Фильтр</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <%= form_tag report_path(@report), method: :get, class: "form", role: "form" do %>
+            <div class="row">
+              <div class="col">
+                <%= label_tag :call_date, 'Начальная дата:', class: "form-label" %>
+                <%= text_field_tag "[filter][start_date]", nil, class: "form-control",
+                                   data: { controller:  "flatpickr",
+                                           flatpickr_default_date: Time.now.beginning_of_day
+                                          } %>
+              </div>
+              <div class="col">
+                <%= label_tag :call_date, 'Конечная дата:', class: "form-label" %>
+                <%= text_field_tag "[filter][stop_date]", nil, class: "form-control",
+                                   data: { controller:  "flatpickr",
+                                           flatpickr_default_date: Time.now.end_of_day
+                                         } %>
+              </div>
             </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                  <%= form_tag report_path(@report), method: :get, class: "form", role: "form" do %>
-                    <div class="row">
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :call_date, 'Начальная дата:', class: "control-label" %>
-                          <div class="input-group date" id="datetimepicker_start" data-target-input="nearest">
-                            <%= text_field_tag "[filter][start_date]", nil, class: "form-control datetimepicker-input", id: "start_datepicker", "data-target" => "#start_datepicker"  %> 
-                            <div class="input-group-append" data-target="#start_datepicker" data-toggle="datetimepicker">
-                              <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :call_date, 'Конечная дата:', class: "control-label" %>
-                          <div class="input-group date" id="datetimepicker_stop" data-target-input="nearest">
-                            <%= text_field_tag "[filter][stop_date]", nil, class: "form-control datetimepicker-input", id: "stop_datepicker", "data-target" => "#stop_datepicker"  %> 
-                            <div class="input-group-append" data-target="#stop_datepicker" data-toggle="datetimepicker">
-                              <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :ingroup, 'Ингруппа:', class:"control-label" %>
-                          <%= select_tag "[filter][ingroup]", options_for_select(available_ingroups(current_user)), prompt: 'Все доступные', class: "form-control", id: "ingroup_select" %>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :operator, 'Оператор:', class:"control-label" %>
-                          <%= select_tag "[filter][operator]", options_for_select(available_operators), prompt: 'Все доступные', class: "form-control", id: "operator_select" %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :status, 'Статус:', class:"control-label" %>
-                          <%= select_tag "[filter][status]", options_for_select(available_statuses(current_user)), prompt: 'Все доступные', class: "form-control", id: "status_select" %>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :phone, 'Телефон:', class:"control-label" %>
-                          <%= text_field_tag "[filter][phone]", nil, class: "form-control", id: "phone_select" %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col">
-                        <div class="form-group">
-                          <%= label_tag :lead, 'Лид:', class:"control-label" %>
-                          <%= text_field_tag "[filter][lead]", nil, class: "form-control", id: "lead_select" %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="text-center">
-                      <%= button_tag(type: "submit", class: "btn btn-primary btn-label-left") do %>
-                        <span><i class="fas fa-search"></i></span>
-                        Искать
-                      <% end %>
-                    </div>
-                  <% end %>
-                </div>
+            <br>
+            <div class="row">
+              <div class="col">
+                <%= label_tag :ingroup, 'Ингруппа:', class: "form-label" %>
+                <%= select_tag "[filter][ingroup]", options_for_select(available_ingroups(current_user)), prompt: 'Все доступные', class: "form-control", id: "ingroup_select" %>
+              </div>
+              <div class="col">
+                <%= label_tag :operator, 'Оператор:', class: "form-label" %>
+                <%= select_tag "[filter][operator]", options_for_select(available_operators), prompt: 'Все доступные', class: "form-control", id: "operator_select" %>
+              </div>
             </div>
+            <br>
+            <div class="row">
+              <div class="col">
+                <%= label_tag :status, 'Статус:', class: "form-label" %>
+                <%= select_tag "[filter][status]", options_for_select(available_statuses(current_user)), prompt: 'Все доступные', class: "form-control", id: "status_select" %>
+              </div>
+              <div class="col">
+                <%= label_tag :phone, 'Телефон:', class: "form-label" %>
+                <%= text_field_tag "[filter][phone]", nil, class: "form-control", id: "phone_select" %>
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col">
+                <%= label_tag :lead, 'Лид:', class: "form-label" %>
+                <%= text_field_tag "[filter][lead]", nil, class: "form-control", id: "lead_select" %>
+              </div>
+            </div>
+            <br>
+            <div class="text-center">
+              <%= button_tag('Искать', type: "submit", class: "btn btn-primary btn-label-left") %>
+            </div>
+          <% end %>
         </div>
+      </div>
     </div>
+  </div>
 </div>

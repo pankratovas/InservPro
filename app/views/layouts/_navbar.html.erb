@@ -20,6 +20,7 @@
             </ul>
           </li>
         <% end %>
+        <!-- Dropdown menu Reports -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Отчеты
@@ -30,12 +31,14 @@
             <% end %>
           </ul>
         </li>
+        <!-- Realtime report -->
         <% if current_user.realtime_permit? %>
           <li class="nav-item">
             <%= link_to Report.find(100).description, (report_path(100)), class: "nav-link" %>
           </li>
         <% end %>
       </ul>
+      <!-- User prop and logout -->
       <ul class="navbar-nav navbar-right">
         <li class="nav-item nav-last">
           <%= link_to current_user.name, (edit_user_path(current_user.id)), {class: "nav-link"} %>
@@ -45,7 +48,5 @@
         </li>
       </ul>
     </div>
-
   </div>
-  
 </nav>

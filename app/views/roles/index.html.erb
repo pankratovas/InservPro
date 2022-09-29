@@ -1,39 +1,35 @@
 <br>
 <div class="row">
-    <div class="form-group col">
-        <div class="btn-group" role="group">
-            <%= link_to(new_role_path, class: "btn btn-primary btn-label-left") do %>
-                <span><i class="far fa-address-card"></i></span>
-                Создать роль
-            <% end %>
-       </div>
-    </div>
+  <div class="col">
+    <%= link_to('Создать роль', new_role_path, class: "btn btn-primary btn-label-left") %>
+  </div>
 </div>
+<br>
 <div class="row">
-    <div class="col">
-        <div class="card">
-            <h5 class="card-header"><span><i class="far fa-address-card"></i></span> Роли</h5>
-            <div class="card-body">
-                <table class="table table-bordered table-hover" id="tblIndexRoles">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Название роли</th>
-                            <th>Описание</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% @roles.each do |role| %>
-                            <tr>
-                                <td><%= link_to role.id, edit_role_path(role) %></td>
-                                <td><%= role.name %></td>
-                                <td><%= role.description %></td>
-                            </tr>
-                        <% end %>
-                    </tbody>
-                </table>
-                <%= will_paginate(@roles) %>
-            </div>
-        </div>
+  <div class="col">
+    <div class="card">
+      <h5 class="card-header">Роли</h5>
+      <div class="card-body">
+        <table class="table table-hover" id="tblIndexRoles">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Название роли</th>
+              <th>Описание</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @roles.each do |role| %>
+              <tr>
+                <td><%= link_to role.id, edit_role_path(role) %></td>
+                <td><%= role.name %></td>
+                <td><%= role.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <%= will_paginate(@roles) %>
+      </div>
     </div>
+  </div>
 </div>

@@ -53,7 +53,7 @@
             (<%= pause_code(agent.pause_code) %>)
           <% end %>
           <% if @status_name == 'Разговор' %>
-            (<%= @ingroup.nil? ? '-': VicidialInboundGroup.where(group_id: @ingroup).first.group_name %>)
+            (<%= @ingroup.nil? ? '-' : VicidialInboundGroup.where(group_id: @ingroup.campaign_id).first.group_name %>)
           <% end %>
         </td>
         <td>

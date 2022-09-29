@@ -7,11 +7,11 @@ end
 if params[:filter].blank? || params[:filter][:stop_date].blank?
   @stop_date = I18n.localize(Time.now.end_of_day, format: '%d %b %Y %H:%M' )
 else
-  @stop_date = I18n.localize(params[:filter][:stop_date], format: '%d %b %Y %H:%M' )
+  @stop_date = I18n.localize(params[:filter][:stop_date].to_time, format: '%d %b %Y %H:%M' )
 end
 
 ingroups = {}
-VicidialInboundGroup.all.select(:group_id,:group_name).map{|i| ingroups[i.group_id]={name: i.group_name, campaign: i.campaign.campaign_id} }
+VicidialInboundGroup.all.select(:group_id,:group_name).map{|i| ingroups[i.group_id]={name: i.group_name, campaign: i.campaign.nil? ? '-' : i.campaign.campaign_id} }
 statuses ={}
 VicidialCampaign.all.map{|c| statuses[c.campaign_id] = c.statuses_hash }
 
