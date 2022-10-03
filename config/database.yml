@@ -5,21 +5,19 @@ default: &default
   collation: utf8_general_ci
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   port: 3306
+  username: rails_user
+    password: rail$!pa$$w0rd11
 
 
 development:
   primary:
     <<: *default
     database: inservpro_dev
-    host: 127.0.0.1
-    username: root
-    password: 376cat
+    host: 192.168.210.86
   vicidial:
     <<: *default
     database: asterisk
     host: 10.78.9.155
-    username: rails_user
-    password: rail$!pa$$w0rd11
     database_tasks: false
 
 
@@ -27,20 +25,21 @@ test:
   primary:
     <<: *default
     database: inservpro_test
-    host: 127.0.0.1
-    username: root
-    password: 376cat
+    host: 192.168.210.86
   vicidial:
     <<: *default
     database: asterisk
     host: 10.78.9.155
-    username: rails_user
-    password: rail$!pa$$w0rd11
     database_tasks: false
 
 
 production:
-  <<: *default
-  database: inservpro
-  username: inservpro
-  password: <%= ENV["INSERVPRO_DATABASE_PASSWORD"] %>
+  primary:
+    <<: *default
+    database: inservpro
+    host: 192.168.210.86
+  vicidial:
+    <<: *default
+    database: asterisk
+    host: 10.78.9.155
+    database_tasks: false

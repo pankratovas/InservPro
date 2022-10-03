@@ -2,7 +2,7 @@ import Flatpickr from "stimulus-flatpickr"
 
 export default class extends Flatpickr {
     initialize() {
-        var Russian = {
+        let Russian = {
             weekdays: {
                 shorthand: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
                 longhand: [

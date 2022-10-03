@@ -4,9 +4,7 @@
 @agents = VicidialLiveAgent.all.order(:status)
 @busy_agents =  @agents.count - @agents.where("status IN ('READY','CLOSER')").count
 %>
-<p>
-  <h6>Операторы КЦ:</h6>
-</p>
+<h6>Операторы КЦ:</h6>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
@@ -65,9 +63,7 @@
   </tbody>
 </table>
 
-<p>
-  <h6>Очередь входящих вызовов КЦ:</h6>
-</p>
+<h6>Очередь входящих вызовов КЦ:</h6>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
@@ -100,9 +96,7 @@
   </tbody>
 </table>
 
-<p>
-  <h6>Очередь исходящих вызовов КЦ:</h6>
-</p>
+<h6>Очередь исходящих вызовов КЦ:</h6>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
