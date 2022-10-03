@@ -8,7 +8,6 @@
 </div>
 <br>
 <% if current_user && current_user.id == 1 %>
-    <ul>
-        <li>PARAMS: <%= params %></li>
-    </ul>
+  <h6>Служебная информация выводится только для admin@in-serv.ru</h6>
+  <p>PARAMS: <%= params %></p>
 <% end %>
