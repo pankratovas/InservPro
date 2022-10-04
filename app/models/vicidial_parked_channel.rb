@@ -1,3 +1,3 @@
 class VicidialParkedChannel < Vicidial
-  self.table_name = "parked_channels"
+  self.table_name = 'parked_channels'
 end

@@ -6,19 +6,15 @@ class ApplicationController < ActionController::Base
   helper_method :seconds_to_hms, :seconds_to_ms, :pause_code
 
   def seconds_to_hms(seconds)
-    if seconds.nil?
-      '00:00:00'
-    else
-      [seconds / 3600, seconds / 60 % 60, seconds % 60].map { |t| t.to_s.rjust(2, '0') }.join(':')
-    end
+    return '00:00:00' if seconds.nil?
+
+    [seconds / 3600, seconds / 60 % 60, seconds % 60].map { |t| t.to_s.rjust(2, '0') }.join(':')
   end
 
   def seconds_to_ms(seconds)
-    if seconds.nil?
-      '00 мин. 00 сек.'
-    else
-      [seconds / 60, 'мин.', seconds % 60, 'сек.'].map { |t| t.to_s.rjust(2, '0') }.join(' ')
-    end
+    return '00:00' if seconds.nil?
+
+    [seconds / 60, seconds % 60].map { |t| t.to_s.rjust(2, '0') }.join(':')
   end
 
   def pause_code(pc)

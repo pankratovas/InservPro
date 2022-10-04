@@ -54,7 +54,7 @@ class Report < ApplicationRecord
                      vicidial_inbound_groups.group_name AS ingroup_name,
                      recording_log.length_in_sec AS record_duration,
                      recording_log.filename AS filename,
-                     recording_log.server_ip AS location
+                     recording_log.location AS location
               FROM
                      vicidial_closer_log
               JOIN
@@ -865,7 +865,7 @@ class Report < ApplicationRecord
       end
       result_hash[r.region_name][:total] = total
     end
-    return [result_hash,@statuses]
+    [result_hash, @statuses]
   end
 
 end

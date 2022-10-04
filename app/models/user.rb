@@ -16,6 +16,7 @@ class User < ApplicationRecord
   validates :sip_number, format: { with: VALID_SIPNUMBER_REGEX }, uniqueness: true, allow_nil: true, allow_blank: true
   validates :password, on: :create, length: { in: 6..128 }
 
+
   def self.search(filter = '')
     return all if filter.blank?
 
