@@ -1,7 +1,9 @@
-<div class="container">
-  <div class="row align-items-center">
-    <div class="col"></div>
-    <div class="col"><%= yield %></div>
-    <div class="col"></div>
+<main class="login-page">
+  <div class="auth">
+    <div class="auth__header auth-header">
+      <%= image_tag "inservpro_logo.svg", class: "auth-header__logo", alt: "InServ Logo" %>
+      <h1 class="auth-header__title">Система управления отчетами</h1>
+    </div>
+    <%= yield %>
   </div>
-</div>
+</main>

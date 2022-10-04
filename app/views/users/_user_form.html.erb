@@ -1,5 +1,6 @@
-<%= form_for(@user, html: {class: "form-horizontal", role: "form"}, local: true) do |f| %>
+<%= form_with model: @user, html: {class: "form-horizontal", role: "form"}, local: true do |f| %>
   <%= render 'layouts/errors' %>
+  <%= @user.errors.full_messages %>
   <div class="row">
     <div class="col-4">
       <%= f.label "Фамилия", class: "form-label" %>

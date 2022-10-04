@@ -16,53 +16,65 @@ class User < ApplicationRecord
   validates :sip_number, format: { with: VALID_SIPNUMBER_REGEX }, uniqueness: true, allow_nil: true, allow_blank: true
   validates :password, on: :create, length: { in: 6..128 }
 
+  def self.search(filter = '')
+    return all if filter.blank?
+
+    if filter.compact_blank!.empty?
+      all
+    else
+      conditions_str = filter.keys.map { |field| "#{field} LIKE ? AND " }.join[0..-6]
+      search_values = filter.values
+      where(conditions_str, search_values)
+    end
+  end
+
   def set_nil_values
-    self.sip_number = nil if self.sip_number.blank?
-    self.phone_number = nil if self.phone_number.blank?
-    self.cell_number = nil if self.cell_number.blank?
+    self.sip_number = nil if sip_number.blank?
+    self.phone_number = nil if phone_number.blank?
+    self.cell_number = nil if cell_number.blank?
   end
 
   def name
-    [self.last_name, self.first_name, self.middle_name].join(' ')
+    [last_name, first_name, middle_name].join(' ')
   end
 
   def phone_numbers
-    @pn = self.phone_number.to_s
-    @pn = @pn+', '+self.phone_number_s unless self.phone_number_s.nil? || self.phone_number_s.blank?
-    @pn = @pn+', '+self.phone_number_t unless self.phone_number_t.nil? || self.phone_number_t.blank?
-    return @pn
+    @pn = phone_number.to_s
+    @pn = "#{@pn}, #{phone_number_s}" unless phone_number_s.nil? || phone_number_s.blank?
+    @pn = "#{@pn}, #{phone_number_t}" unless phone_number_t.nil? || phone_number_t.blank?
+    @pn
   end
 
   def current_login
-    if self.current_sign_in_at
-      [I18n.localize(self.current_sign_in_at, format: '%d %b %Y'),
-       I18n.t(:at), I18n.localize(self.current_sign_in_at, format: '%H:%M'),
-       I18n.t(:from_ip), self.current_sign_in_ip].join(' ')
+    if current_sign_in_at
+      [I18n.localize(current_sign_in_at, format: '%d %b %Y'),
+       I18n.t(:at), I18n.localize(current_sign_in_at, format: '%H:%M'),
+       I18n.t(:from_ip), current_sign_in_ip].join(' ')
     else
       '-'
     end
   end
 
   def last_login
-    if self.last_sign_in_at
-      [I18n.localize(self.last_sign_in_at, format: '%d %b %Y'),
-       I18n.t(:at), I18n.localize(self.last_sign_in_at, format: '%H:%M'),
-       I18n.t(:from_ip), self.last_sign_in_ip].join(' ')
+    if last_sign_in_at
+      [I18n.localize(last_sign_in_at, format: '%d %b %Y'),
+       I18n.t(:at), I18n.localize(last_sign_in_at, format: '%H:%M'),
+       I18n.t(:from_ip), last_sign_in_ip].join(' ')
     else
       '-'
     end
   end
 
   def role_key
-    self.role.permissions["role"]
+    role.permissions['role']
   end
 
   def permitted_reports
-    Report.where(id: self.role.permissions["reports"]).where.not(id: 100)
+    Report.where(id: role.permissions['reports']).where.not(id: 100)
   end
 
   def realtime_permit?
-    self.role.permissions["reports"].include?('100')
+    role.permissions['reports'].include?('100')
   end
 
 
@@ -71,7 +83,7 @@ class User < ApplicationRecord
   private
 
   def activated?
-    self.activated
+    activated
   end
 
   def active_for_authentication?
@@ -79,9 +91,11 @@ class User < ApplicationRecord
   end
 
   def generate_channel_key
-    begin
+    loop do
       key = SecureRandom.urlsafe_base64
-    end while User.where(:channel_key => key).exists?
-    self.channel_key = key
+      self.channel_key = key
+      break if User.where(channel_key: key).empty?
+    end
   end
+
 end

@@ -16,7 +16,7 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               <li><%= link_to 'Пользователи', (users_path), {class: "dropdown-item"} %></li>
-              <li><%= link_to 'Роли', (roles_path), {class: "dropdown-item"} %></li>
+              <li><%= link_to 'Роли', roles_path, {class: "dropdown-item"} %></li>
             </ul>
           </li>
         <% end %>
@@ -27,24 +27,24 @@
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
             <% current_user.permitted_reports.each do |r| %>
-              <li><%= link_to r.description, (report_path(r)), class: "dropdown-item" %></li>
+              <li><%= link_to r.description, report_path(r), class: "dropdown-item" %></li>
             <% end %>
           </ul>
         </li>
         <!-- Realtime report -->
         <% if current_user.realtime_permit? %>
           <li class="nav-item">
-            <%= link_to Report.find(100).description, (report_path(100)), class: "nav-link" %>
+            <%= link_to Report.find(100).description, report_path(100), class: "nav-link" %>
           </li>
         <% end %>
       </ul>
       <!-- User prop and logout -->
       <ul class="navbar-nav navbar-right">
         <li class="nav-item nav-last">
-          <%= link_to current_user.name, (edit_user_path(current_user.id)), {class: "nav-link"} %>
+          <%= link_to current_user.name, edit_user_path(current_user), {class: "nav-link"} %>
         </li>
         <li class="nav-item nav-last">
-          <%= link_to 'Выйти', (destroy_user_session_path), {class: "nav-link", data: { turbo_method: :delete}} %>
+          <%= link_to 'Выйти', destroy_user_session_path, {class: "nav-link", data: { turbo_method: :delete}} %>
         </li>
       </ul>
     </div>

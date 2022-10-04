@@ -9,3 +9,5 @@ ru:
   "false": "Нет"
   at: "в"
   from_ip: "c ip"
+
+  new_user_created: "Создан новый пользователь"
