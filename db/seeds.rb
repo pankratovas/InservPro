@@ -1,16 +1,17 @@
 ROLES = Role.create([
-                      {name: "Администратор",
+                      {name: 'Администратор',
                        permissions: {
                          role: 'super',
                          campaigns: [],
                          ingroups: [],
                          reports: []
                        },
-                       description: ""}
+                       description: 'Пользователи с этой ролью имеют доступ к меню Управление, могут добавлять, изменять, удалять другие роли и пользователей.' }
                     ])
 USERS = User.create([
-                      {first_name: "Администратор",middle_name: "", last_name:"Инсерв", sip_number: "2000", role_id: 1,
-                       activated: true, email:"admin@in-serv.ru", password:'123456', password_confirmation: '123456'}
+                      { first_name: 'Администратор', middle_name: '', last_name: 'Инсерв', sip_number: '2000',
+                        role_id: 1, activated: true, email: 'admin@in-serv.ru', password: '123456',
+                        password_confirmation: '123456' }
                     ])
 REPORTS = Report.create([
                           {id: 100, name: "realtime_report", description: "Отчет реального времени", activated: true},

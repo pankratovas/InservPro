@@ -13,7 +13,7 @@ module Inservpro
 
     config.time_zone = 'Europe/Moscow'
     config.i18n.enforce_available_locales = true
-    config.i18n.available_locales = [:ru, :en]
+    config.i18n.available_locales = %i[ru en]
     config.i18n.default_locale = :ru
     # Configuration for the application, engines, and railties goes here.
     #

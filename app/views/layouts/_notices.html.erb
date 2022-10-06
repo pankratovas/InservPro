@@ -1,0 +1,8 @@
+<% flash.each do |notice,notice_text| %>
+  <% unless notice_text.empty? %>
+    <div class="alert alert-<%= notice == 'notice' ? 'success' : 'warning' %> alert-dismissible fade show" role="alert">
+      <%= notice_text %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+<% end %>

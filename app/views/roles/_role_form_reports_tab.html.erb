@@ -1,0 +1,16 @@
+<div class="tab-pane fade" id="reports" role="tabpanel" aria-labelledby="reports-tab">
+  <br>
+  <% for report in Report.where(activated: true) %>
+    <ul>
+      <li class="list-unstyled">
+        <% if @role.permissions.nil? %>
+          <%= check_box_tag "role[permissions][reports][]", report.id %>
+        <% else %>
+          <%= check_box_tag "role[permissions][reports][]", report.id, @role.permissions["reports"].present? ? @role.permissions["reports"].include?(report.id.to_s) : nil %>
+        <% end %>
+
+        <%= report.description %>
+      </li>
+    </ul>
+  <% end %>
+</div>

@@ -1,48 +1,61 @@
 class Report < ApplicationRecord
 
-  # Статистика реального времени КЦ
-  def realtime_report(filter = params[:filter], user)
-    @result = 'ccenter'
+  # Support methods
+  def dt_format
+    '%Y-%m-%d %H:%M:%S'
+  end
+
+  def start_date_present?(filter)
+    !(filter.nil? || filter[:start_date].blank?)
+  end
+
+  def stop_date_present?(filter)
+    !(filter.nil? || filter[:stop_date].blank?)
+  end
+
+  def date_time_range(filter)
+    start_date = start_date_present?(filter) ? filter[:start_date] : Time.now.beginning_of_day.strftime(dt_format)
+    stop_date = stop_date_present?(filter) ? filter[:stop_date] : Time.now.end_of_day.strftime(dt_format)
+    { begin_date: start_date, end_date: stop_date }
+  end
+
+  def ingroup_present?(filter)
+    !(filter.nil? || filter[:ingroup].blank?)
+  end
+
+  def operator_present?(filter)
+    !(filter.nil? || filter[:operator].blank?)
+  end
+
+  def status_present?(filter)
+    !(filter.nil? || filter[:status].blank?)
+  end
+
+  def phone_present?(filter)
+    !(filter.nil? || filter[:phone].blank?)
+  end
+
+  def lead_present?(filter)
+    !(filter.nil? || filter[:lead].blank?)
+  end
+
+  def campaign_present?(filter)
+    !(filter.nil? || filter[:campaign].blank?)
   end
 
   # Входящие вызовы КЦ
   def inbound_calls(filter = params[:filter], user)
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @stop_date = filter[:stop_date]
-    end
-    if filter.blank? || filter[:ingroup].blank?
-      @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
-    else
-      @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
-    end
-    if filter.blank? || filter[:operator].blank?
-      @operator_query = ""
-    else
-      @operator_query = " AND vicidial_closer_log.user = '#{filter[:operator]}'"
-    end
-    if filter.blank? || filter[:status].blank?
-      @status_query = ""
-    else
-      @status_query = " AND vicidial_closer_log.status = '#{filter[:status]}'"
-    end
-    if filter.blank? || filter[:phone].blank?
-      @phone_query = ""
-    else
-      @phone_query = " AND vicidial_closer_log.phone_number LIKE '#{filter[:phone]}%'"
-    end
-    if filter.blank? || filter[:lead].blank?
-      @lead_query = ""
-    else
-      @lead_query = " AND vicidial_closer_log.lead_id LIKE '#{filter[:lead]}%'"
-    end
-    @order_query = " ORDER BY vicidial_closer_log.call_date DESC"
+    search_dates = date_time_range(filter)
+    @ingroup_query = if ingroup_present?(filter)
+                       " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
+                     else
+                       " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions['ingroups'].to_s[1..-2]})"
+                     end
+    @operator_query = operator_present?(filter) ? " AND vicidial_closer_log.user = '#{filter[:operator]}'" : ''
+    @status_query = status_present?(filter) ? " AND vicidial_closer_log.status = '#{filter[:status]}'" : ''
+    @phone_query = phone_present?(filter) ? " AND vicidial_closer_log.phone_number LIKE '#{filter[:phone]}%'" : ''
+    @lead_query = lead_present?(filter) ? " AND vicidial_closer_log.lead_id LIKE '#{filter[:lead]}%'" : ''
+    @order_query = ' ORDER BY vicidial_closer_log.call_date DESC'
     @query = "SELECT
                      vicidial_closer_log.lead_id AS lead_id,
                      vicidial_closer_log.phone_number AS phone_number,
@@ -62,53 +75,28 @@ class Report < ApplicationRecord
               JOIN
                      vicidial_users ON vicidial_closer_log.user = vicidial_users.user
               LEFT OUTER JOIN
-                     recording_log ON vicidial_closer_log.lead_id = recording_log.lead_id AND vicidial_closer_log.closecallid = recording_log.vicidial_id
+                     recording_log ON vicidial_closer_log.lead_id = recording_log.lead_id AND
+                     vicidial_closer_log.closecallid = recording_log.vicidial_id
               WHERE
-                     vicidial_closer_log.call_date BETWEEN '#{@start_date}' AND '#{@stop_date}'"+
-
-      @ingroup_query+@operator_query+@status_query+@phone_query+@lead_query+@order_query
+                     vicidial_closer_log.call_date BETWEEN '#{search_dates[:begin_date]}' AND
+                     '#{search_dates[:end_date]}'" + @ingroup_query + @operator_query + @status_query +
+             @phone_query + @lead_query + @order_query
     @result = VicidialCloserLog.find_by_sql(@query)
-    return @result
   end
 
   # Исходящие вызовы КЦ
   def outbound_calls(filter = params[:filter], user)
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @stop_date = filter[:stop_date]
-    end
-    if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
-    else
-      @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
-    end
-    if filter.blank? || filter[:operator].blank?
-      @operator_query = ""
-    else
-      @operator_query = " AND vicidial_log.user = '#{filter[:operator]}'"
-    end
-    if filter.blank? || filter[:status].blank?
-      @status_query = ""
-    else
-      @status_query = " AND vicidial_log.status = '#{filter[:status]}'"
-    end
-    if filter.blank? || filter[:phone].blank?
-      @phone_query = ""
-    else
-      @phone_query = " AND vicidial_log.phone_number LIKE '#{filter[:phone]}%'"
-    end
-    if filter.blank? || filter[:lead].blank?
-      @lead_query = ""
-    else
-      @lead_query = " AND vicidial_log.lead_id LIKE '#{filter[:lead]}%'"
-    end
-    @order_query = " ORDER BY vicidial_log.call_date DESC"
+    search_dates = date_time_range(filter)
+    @campaign_query = if campaign_present?(filter)
+                        " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
+                      else
+                        " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
+                      end
+    @operator_query = operator_present?(filter) ? " AND vicidial_log.user = '#{filter[:operator]}'" : ''
+    @status_query = status_present?(filter) ? " AND vicidial_log.status = '#{filter[:status]}'" : ''
+    @phone_query = phone_present?(filter) ? " AND vicidial_log.phone_number LIKE '#{filter[:phone]}%'" : ''
+    @lead_query = lead_present?(filter) ? " AND vicidial_log.lead_id LIKE '#{filter[:lead]}%'" : ''
+    @order_query = ' ORDER BY vicidial_log.call_date DESC'
     @query = "SELECT
                      vicidial_log.lead_id AS lead_id,
                      vicidial_log.phone_number AS phone_number,
@@ -128,40 +116,31 @@ class Report < ApplicationRecord
               JOIN
                      vicidial_users ON vicidial_log.user = vicidial_users.user
               LEFT OUTER JOIN
-                     recording_log ON vicidial_log.lead_id = recording_log.lead_id AND vicidial_log.uniqueid = recording_log.vicidial_id
+                     recording_log ON vicidial_log.lead_id = recording_log.lead_id AND
+                     vicidial_log.uniqueid = recording_log.vicidial_id
               WHERE
-                     vicidial_log.call_date BETWEEN '#{@start_date}' AND '#{@stop_date}'"+
-      @campaign_query+@operator_query+@status_query+@phone_query+@lead_query+@order_query
+                     vicidial_log.call_date BETWEEN '#{search_dates[:begin_date]}' AND
+                     '#{search_dates[:end_date]}'" + @campaign_query + @operator_query + @status_query +
+                     @phone_query + @lead_query + @order_query
     @result = VicidialLog.find_by_sql(@query)
-    return @result
-
   end
 
   # Общая статистика вызовов КЦ
   def summary_calls(filter = params[:filter], user)
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
-    else
-      @stop_date = filter[:stop_date]
-    end
-    if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
-      if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
-      else
+    search_dates = date_time_range(filter)
+    if campaign_present?(filter)
+      @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
+      if ingroup_present?(filter)
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
+      else
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
       end
     else
-      @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
-      if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
-      else
+      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions['campaigns'].to_s[1..-2]})"
+      if ingroup_present?(filter)
         @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
+      else
+        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
       end
     end
     @query1 = "SELECT
@@ -179,25 +158,25 @@ class Report < ApplicationRecord
                FROM
                       vicidial_closer_log
                WHERE
-                      call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
+                      call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
     @query2 = "SELECT
                        COUNT(*) AS Transfered
                 FROM
                        user_call_log
                 WHERE
-                       call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND call_type = 'XFER_3WAY'"
+                       call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND call_type = 'XFER_3WAY'"
     @query3 = "SELECT
                        COUNT(*) AS OutboundCalls
                 FROM
                        vicidial_log
                 WHERE
-                       call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND')"+@campaign_query
+                       call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND')"+@campaign_query
     @result1 = VicidialCloserLog.find_by_sql(@query1)
     @result2 = VicidialCloserLog.find_by_sql(@query2)
     @result3 = VicidialCloserLog.find_by_sql(@query3)
     @result = {
-      date1: @start_date,
-      date2: @stop_date,
+      date1: search_dates[:begin_date],
+      date2: search_dates[:end_date],
       total_calls: @result1[0]["TotalCalls"],
       answered_calls: @result1[0]["Answered"],
       lcr: @result1[0]["TotalCalls"].to_f > 0 ? ((@result1[0]["Answered"].to_f/@result1[0]["TotalCalls"].to_f)*100).round(0) : 0,
@@ -212,7 +191,7 @@ class Report < ApplicationRecord
       queue_3_6: @result1[0]["Queued_36"].to_i,
       queue_6: @result1[0]["Queued_6"].to_i
     }
-    return @result
+    @result
   end
 
   # Быстрая общая статистика вызовов КЦ
@@ -235,8 +214,8 @@ class Report < ApplicationRecord
     @result = {}
     [15, 30, 60, 1440].each do |min|
       @current_time = Time.now
-      @start_date = (@current_time-min.minutes).strftime("%y-%m-%d %H:%M:%S")
-      @stop_date = @current_time.strftime("%y-%m-%d %H:%M:%S")
+      @start_date = (@current_time-min.minutes).strftime(date_time_format)
+      @stop_date = @current_time.strftime(date_time_format)
       @query1 = "SELECT
                          count(*) AS TotalCalls,
                          SUM(length_in_sec) AS 'TotalLength',
@@ -290,12 +269,12 @@ class Report < ApplicationRecord
   # Детальная по операторам КЦ
   def agent_detailed(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -400,11 +379,11 @@ class Report < ApplicationRecord
   # Статистика за день
   def yesterday_report(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = (Time.now.beginning_of_day+8.hours+45.minutes).strftime("%Y-%m-%d %H:%M:%S")
-      @stop_date = (Time.now.beginning_of_day+21.hours).strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = (Time.now.beginning_of_day+8.hours+45.minutes).strftime(date_time_format)
+      @stop_date = (Time.now.beginning_of_day+21.hours).strftime(date_time_format)
     else
-      @start_date = (filter[:start_date].to_time.beginning_of_day+8.hours+45.minutes).strftime("%Y-%m-%d %H:%M:%S")
-      @stop_date = (filter[:start_date].to_time.beginning_of_day+21.hours).strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = (filter[:start_date].to_time.beginning_of_day+8.hours+45.minutes).strftime(date_time_format)
+      @stop_date = (filter[:start_date].to_time.beginning_of_day+21.hours).strftime(date_time_format)
     end
     @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
     @query1 = "SELECT
@@ -455,12 +434,12 @@ class Report < ApplicationRecord
   # Статусы по операторам
   def statuses_by_user(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -522,12 +501,12 @@ class Report < ApplicationRecord
   # Статистика по оператору за период
   def operator_statistics(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -605,12 +584,12 @@ class Report < ApplicationRecord
   # Сводная статистика по операторам
   def all_operator_statistics(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -807,12 +786,12 @@ class Report < ApplicationRecord
   # Вызовы по регионам
   def calls_by_regions(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -831,12 +810,12 @@ class Report < ApplicationRecord
   # Статусы по регионам
   def statuses_by_regions(filter = params[:filter], user)
     if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
     else
       @start_date = filter[:start_date]
     end
     if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime("%Y-%m-%d %H:%M:%S")
+      @stop_date = Time.now.end_of_day.strftime(date_time_format)
     else
       @stop_date = filter[:stop_date]
     end
@@ -866,6 +845,11 @@ class Report < ApplicationRecord
       result_hash[r.region_name][:total] = total
     end
     [result_hash, @statuses]
+  end
+
+  # Статистика реального времени КЦ
+  def realtime_report(filter = params[:filter], user)
+    @result = 'ccenter'
   end
 
 end

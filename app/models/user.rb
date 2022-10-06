@@ -15,6 +15,7 @@ class User < ApplicationRecord
   validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
   validates :sip_number, format: { with: VALID_SIPNUMBER_REGEX }, uniqueness: true, allow_nil: true, allow_blank: true
   validates :password, on: :create, length: { in: 6..128 }
+  validates :last_name, presence: true
 
 
   def self.search(filter = '')
@@ -35,22 +36,15 @@ class User < ApplicationRecord
     self.cell_number = nil if cell_number.blank?
   end
 
-  def name
+  def full_name
     [last_name, first_name, middle_name].join(' ')
-  end
-
-  def phone_numbers
-    @pn = phone_number.to_s
-    @pn = "#{@pn}, #{phone_number_s}" unless phone_number_s.nil? || phone_number_s.blank?
-    @pn = "#{@pn}, #{phone_number_t}" unless phone_number_t.nil? || phone_number_t.blank?
-    @pn
   end
 
   def current_login
     if current_sign_in_at
       [I18n.localize(current_sign_in_at, format: '%d %b %Y'),
-       I18n.t(:at), I18n.localize(current_sign_in_at, format: '%H:%M'),
-       I18n.t(:from_ip), current_sign_in_ip].join(' ')
+       'в', I18n.localize(current_sign_in_at, format: '%H:%M'),
+       'с ip', current_sign_in_ip].join(' ')
     else
       '-'
     end
@@ -59,8 +53,8 @@ class User < ApplicationRecord
   def last_login
     if last_sign_in_at
       [I18n.localize(last_sign_in_at, format: '%d %b %Y'),
-       I18n.t(:at), I18n.localize(last_sign_in_at, format: '%H:%M'),
-       I18n.t(:from_ip), last_sign_in_ip].join(' ')
+       'в', I18n.localize(last_sign_in_at, format: '%H:%M'),
+       'с ip', last_sign_in_ip].join(' ')
     else
       '-'
     end

@@ -1,11 +1,13 @@
 <%= form_with model: resource, as: resource_name, url: session_path(resource_name), class: "auth__form form" do |f| %>
   <div class="form__group form-group">
-    <label for="email" class="form-group__label">Эл. почта</label>
-    <%= f.email_field :email, autofocus: true, id: "email", class: "form-group__input", placeholder: "email@example.com" %>
+    <label for="email" class="form-group__label"><%= t(:email) %></label>
+    <%= f.email_field :email, autofocus: true, id: "email",
+                      class: "form-group__input", placeholder: t(:email_placeholder) %>
   </div>
   <div class="form__group form-group">
-    <label for="password" class="form-group__label">Пароль</label>
-    <%= f.password_field :password, autocomplete: "off", id: "password", class: "form-group__input", placeholder: "Ваш пароль" %>
+    <label for="password" class="form-group__label"><%= t(:password) %></label>
+    <%= f.password_field :password, autocomplete: "off", id: "password",
+                         class: "form-group__input", placeholder: t(:pswd_placeholder) %>
   </div>
-  <%= f.submit "Войти", class: "form__submit-btn" %>
+  <%= f.submit t(:sign_in), class: "form__submit-btn" %>
 <% end %>

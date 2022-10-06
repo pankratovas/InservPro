@@ -1,0 +1,41 @@
+<div class="tab-pane fade show active" id="campaigns" role="tabpanel" aria-labelledby="campaigns-tab">
+  <br>
+  <% VicidialCampaign.all_campaigns.in_groups_of(3, false) do |campaigns| %>
+    <div class="row">
+      <% campaigns.each do |campaign| %>
+        <div class="col-4">
+          <% if @role.permissions.nil? %>
+            <%= check_box_tag "role[permissions][campaigns][]", campaign.campaign_id %>
+          <% else %>
+            <%= check_box_tag "role[permissions][campaigns][]", campaign.campaign_id, @role.permissions["campaigns"].present? ? @role.permissions["campaigns"].include?(campaign.campaign_id) : nil %>
+          <% end %>
+          <a class="btn btn-outline-secondary"
+             data-bs-toggle="collapse"
+             href="#collapseCampaign_<%= campaign.campaign_id %>"
+             role="button"
+             aria-expanded="false"
+             aria-controls="collapseCampaign_<%= campaign.campaign_id %>">
+            <%= campaign.campaign_name %>
+          </a>
+          <div class="collapse" id="collapseCampaign_<%= campaign.campaign_id %>">
+            <div class="card card-body">
+              <% for ingroup in campaign.ingroups %>
+                <ul>
+                  <li class="list-unstyled">
+                    <% if @role.permissions.nil? %>
+                      <%= check_box_tag "role[permissions][ingroups][]", ingroup.group_id %>
+                    <% else %>
+                      <%= check_box_tag "role[permissions][ingroups][]", ingroup.group_id, @role.permissions["ingroups"].present? ? @role.permissions["ingroups"].include?(ingroup.group_id) : nil %>
+                    <% end %>
+                    <%= ingroup.group_name %>
+                  </li>
+                </ul>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <br>
+  <% end %>
+</div>

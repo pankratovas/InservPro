@@ -1,12 +1,6 @@
 @import "bootstrap";
-@font-face {
-  font-family: "Opinion Pro";
-}
-$fontFamily: "Opinion Pro";
-@import "partials/nullify";
-@import "partials/responsive";
-@import "login";
+@import "settings/nullify";
+@import "settings/responsive";
+@import "settings/fonts";
+@import "layouts/login";
 
-body {
-  font-family: $fontFamily;
-}

@@ -1,11 +1,11 @@
 <br>
 <div class="row">
   <div class="col">
-    <%= link_to('Добавить пользователя', new_user_path, class: "btn btn-primary btn-label-left") %>
+    <%= link_to( t(:user_create), new_user_path, class: "btn btn-primary btn-label-left") %>
   </div>
     <div class="col text-end">
     <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#userSearchFilter">
-      Поиск по фильтру
+      <%= t(:search_by_filter) %>
     </button>
   </div>
 </div>
@@ -13,34 +13,40 @@
 <div class="row">
   <div class="col">
     <div class="card">
-      <h5 class="card-header">Пользователи</h5>
+      <h5 class="card-header"><%= t(:users) %></h5>
       <div class="card-body">
         <table class="table table-hover" id="tblIndexUsers">
           <thead>
             <tr>
               <th>#</th>
-              <th>Фамилия</th>
-              <th>Имя</th>
-              <th>Отчество</th>
-              <th>Роль</th>
-              <th>Email</th>
-              <th>SIP номер</th>
-              <th>Вход разрешен</th>
-              <th>Последний вход</th>
+              <th><%= t(:last_name) %></th>
+              <th><%= t(:first_name) %></th>
+              <th><%= t(:middle_name) %></th>
+              <th><%= t(:role)  %></th>
+              <th><%= t(:email) %></th>
+              <th><%= t(:sip_number) %></th>
+              <th><%= t(:activated_user) %></th>
+              <th><%= t(:last_login) %></th>
+              <th><%= t(:actions) %><th>
             </tr>
           </thead>
+          <%= render 'layouts/notices' %>
           <tbody>
             <% @users.each do |user| %>
               <tr>
-                <td><%= link_to user.id, edit_user_path(user) %></td>
+                <td><%= user.id %></td>
                 <td><%= user.last_name %></td>
                 <td><%= user.first_name %></td>
                 <td><%= user.middle_name %></td>
                 <td><%= user.role.name %></td>
                 <td><%= user.email %></td>
                 <td><%= user.sip_number %></td>
-                <td><%=t user.activated.to_s %></td>
+                <td><%= t(user.activated.to_s) %></td>
                 <td><%= user.last_login %></td>
+                <td>
+                  <%= link_to t(:edit), edit_user_path(user), class: "btn btn-warning" %>
+                  <%= button_to t(:delete), user_path(user), method: :delete, class: "btn btn-danger" %>
+                </td>
               </tr>
             <% end %>
           </tbody>
@@ -50,19 +56,4 @@
     </div>
   </div>
 </div>
-
-<div class="modal fade" id="userSearchFilter" tabindex="-1" aria-labelledby="userSearchFilterTitle" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="userSearchFilterTitle">Найти пользователя</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-          <%= render 'filter' %>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<%= render 'modal_filter' %>

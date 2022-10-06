@@ -1,5 +1,6 @@
 class Role < ApplicationRecord
-  has_many  :users
-  #serialize :permissions, JSON
+  has_many :users
+
+  validates :name, presence: true
 
 end

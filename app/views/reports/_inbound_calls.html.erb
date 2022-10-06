@@ -3,41 +3,41 @@
   statuses = VicidialCampaign.all_statuses_map
 %>
 <p>По фильтру за период с <%= localize_start_date(params[:filter]) %> по <%= localize_stop_date(params[:filter]) %></p>
-<% @result = @result.paginate(page: params[:page], per_page: 30) %>
+<% @result = @result.paginate(page: params[:page], per_page: 10) %>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
-    <tr>
-      <th>№</th>
-      <th>Ингруппа</th>
-      <th>Телефон</th>
-      <th>Дата вызова</th>
-      <th>Статус</th>
-      <th>Длительность</th>
-      <th>Оператор</th>
-      <th colspan="2">Запись</th>
-    </tr>
+  <tr>
+    <th>№</th>
+    <th>Ингруппа</th>
+    <th>Телефон</th>
+    <th>Дата вызова</th>
+    <th>Статус</th>
+    <th>Длительность</th>
+    <th>Оператор</th>
+    <th colspan="2">Запись</th>
+  </tr>
   </thead>
   <tbody>
-    <% @result.each do |inbound_call| %>
-      <tr>
-        <td><%= inbound_call[:lead_id] %></td>
-        <td><%= inbound_call[:ingroup_name] %></td>
-        <td><%= inbound_call[:phone_number] %></td>
-        <td><%= localize_datetime inbound_call[:call_date] %></td>
-        <td>
-            <%= statuses[ingroups[inbound_call[:ingroup_id]][:campaign]][inbound_call[:status]] %>
-            <br>
-            (<%= inbound_call[:status] %>)
-        </td>
-        <td><%= seconds_to_ms inbound_call[:record_duration] %></td>
-        <td><%= inbound_call[:user_name] %></td>
-        <%  @record = record_link(inbound_call) %>
-        <td>
-          <audio controls class="mp3player"><source src="<%= @record[:path] %>" type="audio/mpeg"></audio>
-        </td>
-        <td><%= link_to @record[:caption], @record[:path] %></td>
-      </tr>
-    <% end %>
+  <% @result.each do |inbound_call| %>
+    <tr>
+      <td><%= inbound_call[:lead_id] %></td>
+      <td><%= inbound_call[:ingroup_name] %></td>
+      <td><%= inbound_call[:phone_number] %></td>
+      <td><%= localize_datetime inbound_call[:call_date] %></td>
+      <td>
+        <%= statuses[ingroups[inbound_call[:ingroup_id]][:campaign]][inbound_call[:status]] %>
+        <br>
+        (<%= inbound_call[:status] %>)
+      </td>
+      <td><%= seconds_to_ms inbound_call[:record_duration] %></td>
+      <td><%= inbound_call[:user_name] %></td>
+      <%  @record = record_link(inbound_call) %>
+      <td>
+        <audio controls class="mp3player"><source src="<%= @record[:path] %>" type="audio/mpeg"></audio>
+      </td>
+      <td><%= link_to @record[:caption], @record[:path] %></td>
+    </tr>
+  <% end %>
   </tbody>
 </table>
 <%= will_paginate(@result) %>

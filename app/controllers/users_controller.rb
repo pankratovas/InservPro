@@ -19,9 +19,9 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     if @user.save
-      redirect_to users_path
+      redirect_to users_path, notice: t(:user_created)
     else
-      render :new
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -32,9 +32,19 @@ class UsersController < ApplicationController
   def update
     @user = User.find(params[:id])
     if @user.update(user_params)
-      redirect_to users_path
+      redirect_to users_path, notice: t(:user_updated)
     else
-      render :edit
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @user = User.find(params[:id])
+    if @user[:id] == 1
+      redirect_to users_path, alert: t(:user_cant_be_deleted)
+    else
+      @user.destroy
+      redirect_to users_path, notice: t(:user_deleted)
     end
   end
 

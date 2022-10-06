@@ -1,46 +1,45 @@
 <%= form_with model: @user, html: {class: "form-horizontal", role: "form"}, local: true do |f| %>
-  <%= render 'layouts/errors' %>
-  <%= @user.errors.full_messages %>
+  <%= render 'layouts/errors', object: @user %>
   <div class="row">
     <div class="col-4">
-      <%= f.label "Фамилия", class: "form-label" %>
+      <%= f.label t(:last_name), class: "form-label" %>
       <%= f.text_field :last_name, class: "form-control", id: "last_name" %>
     </div>
     <div class="col-4">
-      <%= f.label "Имя", class: "form-label" %>
+      <%= f.label t(:first_name), class: "form-label" %>
       <%= f.text_field :first_name, class: "form-control", id: "first_name" %>
     </div>
     <div class="col-4">
-      <%= f.label "Отчество", class: "form-label" %>
+      <%= f.label t(:middle_name), class: "form-label" %>
       <%= f.text_field :middle_name, class: "form-control", id: "middle_name" %>
     </div>
   </div>
   <div class="row">
     <div class="col-4">
-      <%= f.label "Email", class: "form-label" %>
+      <%= f.label t(:email), class: "form-label" %>
       <%= f.text_field :email, class: "form-control", id: "email" %>
     </div>
     <div class="col-4">
-      <%= f.label "Пароль", class: "form-label" %>
+      <%= f.label t(:password), class: "form-label" %>
       <%= f.password_field :password, class: "form-control", id: "password", placeholder: "******" %>
     </div>
     <div class="col-4">
-      <%= f.label "Подтверждение пароля", class: "form-label" %>
+      <%= f.label t(:password_confirmation), class: "form-label" %>
       <%= f.password_field :password_confirmation, class: "form-control", id: "password_confirmation", placeholder: "******" %>
     </div>
   </div>
   <% if current_user.role_key == 'super' %>
   <div class="row">
     <div class="col-4">
-      <%= f.label "SIP номер", class: "form-label" %>
+      <%= f.label t(:sip_number), class: "form-label" %>
       <%= f.text_field :sip_number, class: "form-control", id: "sip_number" %>
     </div>
     <div class="col-4">
-      <%= f.label "Роль", class: "form-label" %>
+      <%= f.label t(:role), class: "form-label" %>
       <%= f.select :role_id, options_for_select(Role.all.collect{|r| [r.name, r.id]}, @user.role_id), {}, class: "form-control", id: "role_id" %>
     </div>
     <div class="col-4">
-      <%= f.label "Вход разрешен", class: "form-label" %>
+      <%= f.label t(:activated_user), class: "form-label" %>
       <%= f.select :activated, options_for_select([['Да', true],['Нет', false]], @user.activated), {}, class: "form-control", id: "activated" %>
     </div>
   </div>
@@ -48,10 +47,10 @@
   <br>
   <div class="text-center">
     <%= link_to(users_path, class: "btn btn-warning btn-label-left") do %>
-      Отмена
+      <%= t(:cancel) %>
     <% end %>
     <%= button_tag(type: 'submit', class: "btn btn-primary btn-label-left") do %>
-      Сохранить
+      <%= t(:save) %>
     <% end %>
   </div>
   

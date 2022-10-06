@@ -1,10 +1,9 @@
 Rails.application.routes.draw do
-  scope "/inservpro" do
+  scope '/inservpro' do
 
     devise_for :users
-    resources :users, except: [:destroy]
-
-    resources :roles, except: [:show, :destroy]
+    resources :users
+    resources :roles, except: :show
     resources :reports, only: [:show] do
       match 'drop_list', to: 'reports#drop_list', via: 'get'
       match 'drop_callback_action', to: 'reports#drop_callback_action', via: 'get'
@@ -12,7 +11,7 @@ Rails.application.routes.draw do
     end
 
     devise_scope :user do
-      root to: "devise/sessions#new"
+      root to: 'devise/sessions#new'
     end
 
   end

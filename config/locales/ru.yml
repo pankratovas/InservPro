@@ -1,13 +1,83 @@
 ru:
-  app_name: "InservPro 3.0"
-  
-  email: "Электронная почта"
-  password: "Пароль"
-  sign_in: "Вход"
-  
-  "true": "Да"
-  "false": "Нет"
-  at: "в"
-  from_ip: "c ip"
+  # Основная секция--------------------------
+  app_name: 'InservPro3.0'
+  "true": 'Да'
+  "false": 'Нет'
+  at: 'в'
+  from_ip: 'c ip'
 
-  new_user_created: "Создан новый пользователь"
+  # Действия----------------------------------
+  actions: 'Действия'
+  create: 'Добавить'
+  edit: 'Изменить'
+  delete: 'Удалить'
+  search: 'Поиск'
+  filter: 'Фильтр'
+  search_by_filter: 'Поиск по фильтру'
+  find: 'Искать'
+  save: 'Сохранить'
+  cancel: 'Отмена'
+
+
+  # ОБЪЕКТЫ
+  ##---------------------------------------------- USER--------------------------------------
+  user: 'Пользователь'
+  users: 'Пользователи'
+  user_create: 'Добавить пользователя'
+  user_created: 'Новый пользователь добавлен.'
+  user_edit: 'Изменить пользователя'
+  user_updated: 'Пользователь изменен.'
+  user_delete: 'Удалить пользователя'
+  user_deleted: 'Пользователь удален.'
+  user_cant_be_deleted: 'Этого пользователя удалить нельзя!'
+  sign_in: 'Вход'
+  sign_out: 'Выход'
+  last_login: 'Последний вход'
+  email_placeholder: 'email@example.com'
+  pswd_placeholder: 'Ваш пароль'
+  ### атрибуты user
+  last_name: 'Фамилия'
+  first_name: 'Имя'
+  middle_name: 'Отчество'
+  email: 'Электронная почта'
+  password: 'Пароль'
+  password_confirmation: 'Подтверждение пароля'
+  sip_number: 'Номер SIP'
+  activated_user: 'Вход разрешен'
+  ##--------------------------------------------- ROLE--------------------------------------
+  role: 'Роль'
+  roles: 'Роли'
+  role_name: 'Название'
+  role_description: 'Описание'
+  role_create: 'Добавить роль'
+  role_created: 'Новая роль добавлена.'
+  role_edit: 'Изменить роль'
+  role_updated: 'Роль изменена.'
+  role_delete: 'Удалить роль'
+  role_deleted: 'Роль удалена.'
+  role_cant_be_deleted: 'Нельзя удалить! Роль назначена одному или нескольким пользователям.'
+  role_permission_management: 'Доступно меню "Управление"'
+  ##------------------------------------------------ REPORT ----------------------------------
+  report: 'Отчет'
+  reports: 'Отчеты'
+  ##------------------------------------------------ CAMPAIGN ---------------------------------
+  campaign: 'Кампания'
+  campaigns: 'Кампании'
+  ##------------------------------------------------ INGROUP ----------------------------------
+  ingroup: 'Входящая линия'
+  ingroups: 'Входящие линии'
+
+  # Атрибуты объектов БД-----------------------
+  activerecord:
+    attributes:
+      user:
+        last_name: :last_name
+        first_name: :first_name
+        middle_name: :middle_name
+        email: :email
+        password: :password
+        password_confirmation: :password_confirmation
+        sip_number: :sip_number
+        activated: :activated_user
+      role:
+        name: :role_name

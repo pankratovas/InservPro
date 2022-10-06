@@ -20,4 +20,5 @@ class ReportsController < ApplicationController
     @campaign = 'ccenter'
     render partial: 'reports/realtime_statistics', object: @campaign
   end
+
 end

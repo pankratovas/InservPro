@@ -1,0 +1,30 @@
+<%= form_tag users_path, method: :get, class: "form" do %>
+  
+  <div class="mb-3">
+    <%= label_tag :last_name, t(:last_name), class: "form-label" %>
+    <%= text_field_tag  "[filter][last_name]", nil, class: "form-control" %>
+  </div>
+  <div class="mb-3">
+    <%= label_tag :first_name, t(:first_name), class: "form-label" %>
+    <%= text_field_tag  "[filter][first_name]", nil, class: "form-control" %>
+  </div>
+  <div class="mb-3">
+    <%= label_tag :middle_name, t(:middle_name), class: "form-label" %>
+    <%= text_field_tag  "[filter][middle_name]", nil, class: "form-control" %>
+  </div>
+  <div class="mb-3">
+    <%= label_tag :email, t(:email), class: "form-label" %>
+    <%= text_field_tag  "[filter][email]", nil, class: "form-control" %>
+  </div>
+  <div class="mb-3">
+    <%= label_tag :sip_number, t(:sip_number), class: "form-label" %>
+    <%= text_field_tag  "[filter][sip_number]", nil, class: "form-control" %>
+  </div>
+  <br>
+  <div class="text-center">
+    <%= button_tag(type: "submit", class: "btn btn-primary btn-label-left") do %>
+      <%= t(:find) %>
+    <% end %>
+  </div>
+  
+<% end %>

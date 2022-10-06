@@ -41,7 +41,7 @@
       <!-- User prop and logout -->
       <ul class="navbar-nav navbar-right">
         <li class="nav-item nav-last">
-          <%= link_to current_user.name, edit_user_path(current_user), {class: "nav-link"} %>
+          <%= link_to current_user.full_name, edit_user_path(current_user), {class: "nav-link"} %>
         </li>
         <li class="nav-item nav-last">
           <%= link_to 'Выйти', destroy_user_session_path, {class: "nav-link", data: { turbo_method: :delete}} %>

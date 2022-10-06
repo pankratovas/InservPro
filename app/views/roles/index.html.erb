@@ -1,29 +1,35 @@
 <br>
 <div class="row">
   <div class="col">
-    <%= link_to('Создать роль', new_role_path, class: "btn btn-primary btn-label-left") %>
+    <%= link_to( t(:role_create), new_role_path, class: "btn btn-primary btn-label-left") %>
   </div>
 </div>
 <br>
 <div class="row">
   <div class="col">
     <div class="card">
-      <h5 class="card-header">Роли</h5>
+      <h5 class="card-header"><%= t(:roles) %></h5>
       <div class="card-body">
         <table class="table table-hover" id="tblIndexRoles">
           <thead>
             <tr>
               <th>#</th>
-              <th>Название роли</th>
-              <th>Описание</th>
+              <th><%= t(:role_name) %></th>
+              <th><%= t(:role_description) %></th>
+              <th><%= t(:actions) %></th>
             </tr>
           </thead>
+          <%= render 'layouts/notices' %>
           <tbody>
             <% @roles.each do |role| %>
               <tr>
-                <td><%= link_to role.id, edit_role_path(role) %></td>
+                <td><%= role.id %></td>
                 <td><%= role.name %></td>
                 <td><%= role.description %></td>
+                <td>
+                  <%= link_to t(:edit), edit_role_path(role), class: "btn btn-warning" %>
+                  <%= button_to t(:delete), role_path(role), method: :delete, class: "btn btn-danger" %>
+                </td>
               </tr>
             <% end %>
           </tbody>
