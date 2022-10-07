@@ -2,7 +2,8 @@
   ingroups = VicidialInboundGroup.all_map_hash
   statuses = VicidialCampaign.all_statuses_map
 %>
-<p>По фильтру за период с <%= localize_start_date(params[:filter]) %> по <%= localize_stop_date(params[:filter]) %></p>
+<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
+  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
 <% @result = @result.paginate(page: params[:page], per_page: 10) %>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">

@@ -60,7 +60,8 @@ export default class extends Flatpickr {
         this.config = {
             locale: Russian,
             enableTime: true,
-            enableSeconds: true
+            enableSeconds: true,
+            allowInput: true
         }
     }
 }

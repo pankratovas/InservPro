@@ -23,14 +23,14 @@
                 <%= label_tag :call_date, 'Начальная дата:', class: "form-label" %>
                 <%= text_field_tag "[filter][start_date]", nil, class: "form-control",
                                    data: { controller:  "flatpickr",
-                                           flatpickr_default_date: Time.now.beginning_of_day
+                                           flatpickr_default_date: params[:filter][:start_date]
                                           } %>
               </div>
               <div class="col">
                 <%= label_tag :call_date, 'Конечная дата:', class: "form-label" %>
                 <%= text_field_tag "[filter][stop_date]", nil, class: "form-control",
                                    data: { controller:  "flatpickr",
-                                           flatpickr_default_date: Time.now.end_of_day
+                                           flatpickr_default_date: params[:filter][:stop_date]
                                          } %>
               </div>
             </div>

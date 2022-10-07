@@ -1,17 +1,6 @@
-<%
-if params[:filter].blank? || params[:filter][:start_date].blank?
-  @start_date = I18n.localize(Time.now.beginning_of_day, format: '%d %b %Y %H:%M')
-else
-  @start_date = I18n.localize(params[:filter][:start_date].to_time, format: '%d %b %Y %H:%M')
-end
-if params[:filter].blank? || params[:filter][:stop_date].blank?
-  @stop_date = I18n.localize(Time.now.end_of_day, format: '%d %b %Y %H:%M' )
-else
-  @stop_date = I18n.localize(params[:filter][:stop_date].to_time, format: '%d %b %Y %H:%M' )
-end
-%>
-<p>По фильтру за период с <b><%= @start_date %></b> по <b><%= @stop_date %></b></p>
-<% @result = @result.paginate(page: params[:page], per_page: 30) %>
+<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
+                          <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
+<% @result = @result.paginate(page: params[:page], per_page: 10) %>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
@@ -28,29 +17,22 @@ end
   <tbody>
     <% @result.each do |outbound_call| %>
       <tr>
-        <td><%= outbound_call.lead_id %></td>
-        <td><%= outbound_call.campaign_name %></td>
-        <td><%= outbound_call.phone_number %></td>
-        <td><%= I18n.localize(outbound_call.call_date.utc, format: '%d %b %Y %H:%M') %></td>
+        <td><%= outbound_call[:lead_id] %></td>
+        <td><%= outbound_call[:campaign_name] %></td>
+        <td><%= outbound_call[:phone_number] %></td>
+        <td><%= localize_datetime outbound_call[:call_date] %></td>
         <td>
-          <%= VicidialCampaign.find(outbound_call.campaign_id).statuses_hash[outbound_call.status] %> (<%= outbound_call.status %>)
+          <%= VicidialCampaign.find(outbound_call.campaign_id).statuses_hash[outbound_call.status] %>
+          <br>
+          (<%= outbound_call[:status] %>)
         </td>
-        <% if !outbound_call.record_duration.nil? %>
-          <td><%= Time.at(outbound_call.record_duration).utc.strftime("%M:%S")%></td>
-        <% else %>
-          <td>00:00</td>
-        <% end %>
-        <td><%= outbound_call.user_name %></td>
-        <% if !outbound_call.filename.nil? %>
-          <td><audio controls class="mp3player"><source src="<%= record_path(outbound_call, 'out') %>" type="audio/mpeg"></audio></td>
-          <td>
-            <%= link_to(record_path(outbound_call, 'out')) do %>
-              <span><i class="fas fa-download"></i></span>
-            <% end %>
-          </td>
-        <% else %>
-          <td colspan="2">Нет записи</td>
-        <% end %>
+        <td><%= seconds_to_ms outbound_call[:record_duration] %></td>
+        <td><%= outbound_call[:user_name] %></td>
+        <%  @record = record_link(outbound_call) %>
+        <td>
+          <audio controls class="mp3player"><source src="<%= @record[:path] %>" type="audio/mpeg"></audio>
+        </td>
+        <td><%= link_to @record[:caption], @record[:path] %></td>
       </tr>
     <% end %>
   </tbody>

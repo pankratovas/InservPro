@@ -111,18 +111,9 @@ module ReportsHelper
                     .order(:status_name)).map { |s| ["#{s[:status_name]} (#{s[:status]})", s[:status]] }
   end
 
-  def localize_start_date(filter = '')
+  def localize_datetime_str(date_str)
     format = '%d %b %Y %H:%M'
-    return I18n.localize(Time.now.beginning_of_day, format: format) if filter.blank? || filter[:start_date].blank?
-
-    I18n.localize(filter[:start_date].to_time, format: format)
-  end
-
-  def localize_stop_date(filter = '')
-    format = '%d %b %Y %H:%M'
-    return I18n.localize(Time.now.end_of_day, format: format) if filter.blank? || filter[:stop_date].blank?
-
-    I18n.localize(filter[:stop_date].to_time, format: format)
+    I18n.localize(date_str.to_datetime, format: format)
   end
 
   def localize_datetime(datetime)
