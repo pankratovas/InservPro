@@ -1,6 +1,5 @@
 class Report < ApplicationRecord
 
-
   # TEST
   def test_report(user, filter = params[:filter])
     filter
@@ -8,258 +7,171 @@ class Report < ApplicationRecord
 
   # Входящие вызовы КЦ
   def inbound_calls(user, filter = params[:filter])
-    filter[:ingroup] = user_permitted_ingroups(user) if filter[:ingroup].blank?
+    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
     @search_params = filter.compact_blank!
     @result = VicidialCloserLog.inbound_calls_by_filter(@search_params)
   end
 
   # Исходящие вызовы КЦ
   def outbound_calls(user, filter = params[:filter])
-    filter[:campaign] = user_permitted_campaigns(user) if filter[:campaign].blank?
+    filter[:campaign] = user.permitted_campaigns.join('\',\'') if filter[:campaign].blank?
     @search_params = filter.compact_blank!
     @result = VicidialLog.outbound_calls_by_filter(@search_params)
   end
 
   # Общая статистика вызовов КЦ
   def summary_calls(user, filter = params[:filter])
-    search_dates = date_time_range(filter)
-    if campaign_present?(filter)
-      @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
-      if ingroup_present?(filter)
-        @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
-      else
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
-      end
-    else
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions['campaigns'].to_s[1..-2]})"
-      if ingroup_present?(filter)
-        @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
-      else
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
-      end
+    if filter[:campaign].blank?
+      filter[:campaign] = user.permitted_campaigns.join('\',\'')
+      filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    elsif !filter[:campaign].blank? && filter[:ingroup].blank?
+      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) &
+                          user.permitted_ingroups).join('\',\'')
     end
-    @query1 = "SELECT
-                      count(*) AS TotalCalls,
-                      SUM(length_in_sec) AS 'TotalLength',
-                      SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
-                      SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
-                      SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
-                      MAX(queue_seconds) AS Max_queue,
-                      MIN(queue_seconds) AS Min_queue,
-                      SUM(IF(queue_seconds <= 180, 1,0)) AS 'Queued_03',
-                      SUM(IF((queue_seconds > 180 AND queue_seconds <= 360), 1,0)) AS 'Queued_36',
-                      SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_6',
-                      SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime'
-               FROM
-                      vicidial_closer_log
-               WHERE
-                      call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-    @query2 = "SELECT
-                       COUNT(*) AS Transfered
-                FROM
-                       user_call_log
-                WHERE
-                       call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND call_type = 'XFER_3WAY'"
-    @query3 = "SELECT
-                       COUNT(*) AS OutboundCalls
-                FROM
-                       vicidial_log
-                WHERE
-                       call_date BETWEEN '#{search_dates[:begin_date]}' AND '#{search_dates[:end_date]}' AND status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND')"+@campaign_query
-    @result1 = VicidialCloserLog.find_by_sql(@query1)
-    @result2 = VicidialCloserLog.find_by_sql(@query2)
-    @result3 = VicidialCloserLog.find_by_sql(@query3)
+    @search_params = filter.compact_blank!
+    @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
+    @transfer_calls = VicidialUserCallLog.summary_metric_by_filter(@search_params).first
+    @outbound_calls = VicidialLog.summary_metric_by_filter(@search_params).first
     @result = {
-      date1: search_dates[:begin_date],
-      date2: search_dates[:end_date],
-      total_calls: @result1[0]["TotalCalls"],
-      answered_calls: @result1[0]["Answered"],
-      lcr: @result1[0]["TotalCalls"].to_f > 0 ? ((@result1[0]["Answered"].to_f/@result1[0]["TotalCalls"].to_f)*100).round(0) : 0,
-      answered_in_20: @result1[0]["Answered20"],
-      transfered: @result2[0]["Transfered"],
-      outbound: @result3[0]["OutboundCalls"],
-      avg_total_length: @result1[0]["TotalCalls"].to_f > 0 ? (@result1[0]["TotalLength"].to_f/@result1[0]["TotalCalls"].to_f).round(0) : 0,
-      avg_queue_length: @result1[0]["Queued"].to_f > 0 ? (@result1[0]["QueueTime"].to_f/@result1[0]["Queued"].to_f).round(0) : 0,
-      max_queue_length: @result1[0]["Max_queue"].to_i,
-      min_queue_length: @result1[0]["Min_queue"].to_i,
-      queue_0_3: @result1[0]["Queued_03"].to_i,
-      queue_3_6: @result1[0]["Queued_36"].to_i,
-      queue_6: @result1[0]["Queued_6"].to_i
+      date1: filter[:start_date],
+      date2: filter[:stop_date],
+      total_calls: @inbound_calls['TotalCalls'],
+      answered_calls: @inbound_calls['Answered'],
+      lcr: calc_percent(@inbound_calls['Answered'], @inbound_calls['TotalCalls']),
+      answered_in_20: @inbound_calls['Answered20'],
+      transfered: @transfer_calls['Transfered'],
+      outbound: @outbound_calls['OutboundCalls'],
+      avg_total_length: calc_percent(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
+      avg_queue_length: calc_percent(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
+      max_queue_length: @inbound_calls['Max_queue'].to_i,
+      min_queue_length: @inbound_calls['Min_queue'].to_i,
+      queue_0_3: @inbound_calls['Queued_03'].to_i,
+      queue_3_6: @inbound_calls['Queued_36'].to_i,
+      queue_6: @inbound_calls['Queued_6'].to_i
     }
-    @result
   end
 
   # Быстрая общая статистика вызовов КЦ
   def summary_calls_preset(user, filter = params[:filter])
-    if filter.blank? || filter[:campaign].blank?
-      @campaign_query = " AND vicidial_log.campaign_id IN (#{user.role.permissions["campaigns"].to_s[1..-2]})"
-      if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
-      else
-        @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
-      end
-    else
-      @campaign_query = " AND vicidial_log.campaign_id = '#{filter[:campaign]}'"
-      if filter.blank? || filter[:ingroup].blank?
-        @ingroup_query = " AND vicidial_closer_log.campaign_id IN (#{(VicidialCampaign.find(filter[:campaign]).ingroups & user.role.permissions["ingroups"]).to_s[1..-2]})"
-      else
-        @ingroup_query = " AND vicidial_closer_log.campaign_id = '#{filter[:ingroup]}'"
-      end
+    if filter[:campaign].blank?
+      filter[:campaign] = user.permitted_campaigns.join('\',\'')
+      filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    elsif !filter[:campaign].blank? && filter[:ingroup].blank?
+      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) &
+        user.permitted_ingroups).join('\',\'')
     end
+    @search_params = filter.compact_blank!
     @result = {}
     [15, 30, 60, 1440].each do |min|
       @current_time = Time.now
-      @start_date = (@current_time-min.minutes).strftime(date_time_format)
-      @stop_date = @current_time.strftime(date_time_format)
-      @query1 = "SELECT
-                         count(*) AS TotalCalls,
-                         SUM(length_in_sec) AS 'TotalLength',
-                         SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
-                         SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
-                         SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
-                         MAX(queue_seconds) AS Max_queue,
-                         MIN(queue_seconds) AS Min_queue,
-                         SUM(IF(queue_seconds <= 180, 1,0)) AS 'Queued_03',
-                         SUM(IF((queue_seconds > 180 AND queue_seconds <= 360), 1,0)) AS 'Queued_36',
-                         SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_6',
-                         SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime'
-                  FROM
-                         vicidial_closer_log
-                  WHERE
-                         call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-      @query2 = "SELECT
-                         COUNT(*) AS Transfered
-                   FROM
-                         user_call_log
-                   WHERE
-                         call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND call_type = 'XFER_3WAY'"
-      @query3 = "SELECT
-                         COUNT(*) AS OutboundCalls
-                   FROM
-                         vicidial_log
-                   WHERE
-                         call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND')"+@campaign_query
-      @result1 = VicidialCloserLog.find_by_sql(@query1)
-      @result2 = VicidialCloserLog.find_by_sql(@query2)
-      @result3 = VicidialCloserLog.find_by_sql(@query3)
-      @result[min]={
-        total_calls: @result1[0]["TotalCalls"],
-        answered_calls: @result1[0]["Answered"],
-        lcr: @result1[0]["TotalCalls"].to_f > 0 ? ((@result1[0]["Answered"].to_f/@result1[0]["TotalCalls"].to_f)*100).round(0) : 0,
-        answered_in_20: @result1[0]["Answered20"],
-        transfered: @result2[0]["Transfered"],
-        outbound: @result3[0]["OutboundCalls"],
-        avg_total_length: @result1[0]["TotalCalls"].to_f > 0 ? (@result1[0]["TotalLength"].to_f/@result1[0]["TotalCalls"].to_f).round(0) : 0,
-        avg_queue_length: @result1[0]["Queued"].to_f > 0 ? (@result1[0]["QueueTime"].to_f/@result1[0]["Queued"].to_f).round(0) : 0,
-        max_queue_length: @result1[0]["Max_queue"].to_i,
-        min_queue_length: @result1[0]["Min_queue"].to_i,
-        queue_0_3: @result1[0]["Queued_03"].to_i,
-        queue_3_6: @result1[0]["Queued_36"].to_i,
-        queue_6: @result1[0]["Queued_6"].to_i
+      filter[:start_date] = (@current_time - min.minutes).strftime(date_time_format)
+      filter[:stop_date] = @current_time.strftime(date_time_format)
+      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
+      @transfer_calls = VicidialUserCallLog.summary_metric_by_filter(@search_params).first
+      @outbound_calls = VicidialLog.summary_metric_by_filter(@search_params).first
+      @result[min] = {
+        total_calls: @inbound_calls['TotalCalls'],
+        answered_calls: @inbound_calls['Answered'],
+        lcr: calc_percent(@inbound_calls['Answered'], @inbound_calls['TotalCalls']),
+        answered_in_20: @inbound_calls['Answered20'],
+        transfered: @transfer_calls['Transfered'],
+        outbound: @outbound_calls['OutboundCalls'],
+        avg_total_length: calc_percent(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
+        avg_queue_length: calc_percent(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
+        max_queue_length: @inbound_calls['Max_queue'].to_i,
+        min_queue_length: @inbound_calls['Min_queue'].to_i,
+        queue_0_3: @inbound_calls['Queued_03'].to_i,
+        queue_3_6: @inbound_calls['Queued_36'].to_i,
+        queue_6: @inbound_calls['Queued_6'].to_i
       }
     end
-    return @result
+    @result
   end
 
   # Детальная по операторам КЦ
   def agent_detailed(user, filter = params[:filter])
-
-    @query1 = "SELECT
-                        COUNT(*) AS 'TotalCalls',
-                        SUM(talk_sec) AS 'TalkDur',
-                        user AS 'SIP',
-                        SUM(pause_sec) AS 'PauseDur',
-                        SUM(dispo_sec) AS 'DispoDur',
-                        SUM(wait_sec) AS 'WaitDur',
-                        SUM(dead_sec) AS 'DeadDur',
-                        status AS 'Status'
-               FROM
-                        vicidial_agent_log
-               WHERE
-                        event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND wait_sec<65000 AND talk_sec<65000 AND dispo_sec<65000 AND campaign_id = 'CCENTER' AND status IS NOT NULL
-               GROUP BY
-                        user"
-    @query2 = "SELECT
-                        user AS 'SIP',
-                        SUM(pause_sec) AS 'Pause',
-                        SUM(wait_sec + talk_sec + dispo_sec) AS 'NonPause',
-                        sub_status AS 'PauseCode'
-                FROM
-                        vicidial_agent_log
-                WHERE
-                        event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND campaign_id = 'CCENTER'
-                GROUP BY
-                        user"
-    @query3 = "SELECT DISTINCT sub_status AS 'PauseCode' FROM vicidial_agent_log WHERE event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND campaign_id = 'CCENTER'"
-    @query4 = "SELECT
-                        user AS 'SIP',
-                        SUM(pause_sec) AS 'Pause',
-                        sub_status AS 'PauseCode'
-                FROM
-                        vicidial_agent_log
-                WHERE
-                        event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND campaign_id = 'CCENTER'
-                GROUP BY
-                        user, sub_status"
-    @result1 = VicidialCloserLog.find_by_sql(@query1)
+    filter[:campaign] = user.permitted_campaigns.join('\',\'') if filter[:campaign].blank?
+    @search_params = filter.compact_blank!
+    @agent_details = VicidialAgentLog.agent_details(@search_params)
+    @pause_codes = VicidialAgentLog.get_pause_codes(@search_params).map(&:PauseCode)
+    @agent_pauses = VicidialAgentLog.agent_pauses(@search_params)
     apd1 = {}
-    @result1.each do |row|
+    @agent_details.each do |row|
       apd1[row['SIP']] = {
         user_calls: row['TotalCalls'].to_i,
-        user_time: row['PauseDur'].to_i+row['WaitDur'].to_i+row['TalkDur'].to_i+row['DispoDur'].to_i+row['DeadDur'].to_i,
+        user_time: row['PauseDur'].to_i +
+                   row['WaitDur'].to_i +
+                   row['TalkDur'].to_i +
+                   row['DispoDur'].to_i +
+                   row['DeadDur'].to_i,
         user_pause: row['PauseDur'].to_i,
-        user_avg_pause: (row['PauseDur'].to_f/row['TotalCalls'].to_f).round(0),
+        user_avg_pause: (row['PauseDur'] / row['TotalCalls'].to_f).round(0),
         user_wait: row['WaitDur'].to_i,
-        user_avg_wait: (row['WaitDur'].to_f/row['TotalCalls'].to_f).round(0),
+        user_avg_wait: (row['WaitDur'] / row['TotalCalls'].to_f).round(0),
         user_talk: row['TalkDur'].to_i,
-        user_avg_talk: (row['TalkDur'].to_f/row['TotalCalls'].to_f).round(0),
+        user_avg_talk: (row['TalkDur'] / row['TotalCalls'].to_f).round(0),
         user_dispo: row['DispoDur'].to_i,
-        user_avg_dispo: (row['DispoDur'].to_f/row['TotalCalls'].to_f).round(0),
+        user_avg_dispo: (row['DispoDur'] / row['TotalCalls'].to_f).round(0),
         user_dead: row['DeadDur'].to_i,
-        user_avg_dead: (row['DeadDur'].to_f/row['TotalCalls'].to_f).round(0)
+        user_avg_dead: (row['DeadDur'] / row['TotalCalls'].to_f).round(0)
       }
     end
-    apd1t= {
-      total_calls: apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x},
-      total_time: apd1.keys.each.map {|user| apd1[user][:user_time] }.compact.inject{|sum,x| sum+x},
-      total_pause: apd1.keys.each.map {|user| apd1[user][:user_pause] }.compact.inject{|sum,x| sum+x},
-      total_avg_pause: begin (apd1.keys.each.map {|user| apd1[user][:user_pause] }.compact.inject{|sum,x| sum+x}.to_f/apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x}.to_f).round(0) rescue 0 end,
-      total_wait: apd1.keys.each.map {|user| apd1[user][:user_wait] }.compact.inject{|sum,x| sum+x},
-      total_avg_wait: begin (apd1.keys.each.map {|user| apd1[user][:user_wait] }.compact.inject{|sum,x| sum+x}.to_f/apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x}.to_f).round(0) rescue 0 end,
-      total_talk: apd1.keys.each.map {|user| apd1[user][:user_talk] }.compact.inject{|sum,x| sum+x},
-      total_avg_talk: begin (apd1.keys.each.map {|user| apd1[user][:user_talk] }.compact.inject{|sum,x| sum+x}.to_f/apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x}.to_f).round(0) rescue 0 end,
-      total_dispo: apd1.keys.each.map {|user| apd1[user][:user_dispo] }.compact.inject{|sum,x| sum+x},
-      total_avg_dispo: begin (apd1.keys.each.map {|user| apd1[user][:user_dispo] }.compact.inject{|sum,x| sum+x}.to_f/apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x}.to_f).round(0) rescue 0 end,
-      total_dead: apd1.keys.each.map {|user| apd1[user][:user_dead] }.compact.inject{|sum,x| sum+x},
-      total_avg_dead: begin (apd1.keys.each.map {|user| apd1[user][:user_dead] }.compact.inject{|sum,x| sum+x}.to_f/apd1.keys.each.map {|user| apd1[user][:user_calls] }.compact.inject{|sum,x| sum+x}.to_f).round(0) rescue 0 end
+    apd1t = {
+      total_calls: apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x },
+      total_time: apd1.keys.each.map { |user| apd1[user][:user_time] }.compact.inject { |sum, x| sum + x },
+      total_pause: apd1.keys.each.map { |user| apd1[user][:user_pause] }.compact.inject { |sum, x| sum + x },
+      total_avg_pause:
+        begin (apd1.keys.each.map { |user| apd1[user][:user_pause] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        rescue 0
+        end,
+      total_wait: apd1.keys.each.map { |user| apd1[user][:user_wait] }.compact.inject { |sum, x| sum + x },
+      total_avg_wait:
+        begin (apd1.keys.each.map { |user| apd1[user][:user_wait] }.compact.inject { |sum, x| sum + x} /
+               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x}.to_f).round(0)
+        rescue 0
+        end,
+      total_talk: apd1.keys.each.map { |user| apd1[user][:user_talk] }.compact.inject { |sum, x| sum + x },
+      total_avg_talk:
+        begin (apd1.keys.each.map { |user| apd1[user][:user_talk] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x}.to_f).round(0)
+        rescue 0
+        end,
+      total_dispo: apd1.keys.each.map { |user| apd1[user][:user_dispo] }.compact.inject { |sum, x| sum + x },
+      total_avg_dispo:
+        begin (apd1.keys.each.map { |user| apd1[user][:user_dispo] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        rescue 0
+        end,
+      total_dead: apd1.keys.each.map { |user| apd1[user][:user_dead] }.compact.inject { |sum, x| sum + x },
+      total_avg_dead:
+        begin (apd1.keys.each.map { |user| apd1[user][:user_dead] }.compact.inject{ |sum,x| sum + x } /
+               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        rescue 0
+        end
     }
-    @result2 = VicidialCloserLog.find_by_sql(@query2)
-    @pause_codes = VicidialCloserLog.find_by_sql(@query3).map { |x| x['PauseCode'] }
-    @result4 = VicidialCloserLog.find_by_sql(@query4)
     apd2 = {}
-    @result2.each do |row|
+    @agent_details.each do |row|
       apd2[row['SIP']] = {
         user_time: row['Pause'].to_i + row['NonPause'].to_i,
         user_pause: row['Pause'].to_i,
-        user_nonpause: row['NonPause'].to_i,
+        user_nonpause: row['NonPause'].to_i
       }
       @pause_codes.each do |pc|
-        @result4.each do |str|
-          apd2[row['SIP']][pc] = str['Pause'] if ((str['SIP'] == row['SIP']) & (str['PauseCode'] == pc))
+        @agent_pauses.each do |str|
+          apd2[row['SIP']][pc] = str['Pause'] if (str['SIP'] == row['SIP']) & (str['PauseCode'] == pc)
         end
       end
     end
-    apd2t = {}
     apd2t = {
-      total_time: apd2.keys.each.map {|user| apd2[user][:user_time] }.compact.inject{|sum,x| sum+x},
-      total_pause: apd2.keys.each.map {|user| apd2[user][:user_pause] }.compact.inject{|sum,x| sum+x},
-      total_nonpause: apd2.keys.each.map {|user| apd2[user][:user_nonpause] }.compact.inject{|sum,x| sum+x}
+      total_time: apd2.keys.each.map { |user| apd2[user][:user_time] }.compact.inject { |sum, x| sum + x },
+      total_pause: apd2.keys.each.map { |user| apd2[user][:user_pause] }.compact.inject { |sum, x| sum + x },
+      total_nonpause: apd2.keys.each.map { |user| apd2[user][:user_nonpause] }.compact.inject { |sum, x| sum + x }
     }
     @pause_codes.each do |pc|
-      apd2t[pc] = apd2.keys.each.map {|user| apd2[user][pc] }.compact.inject{|sum,x| sum+x}
+      apd2t[pc] = apd2.keys.each.map { |user| apd2[user][pc] }.compact.inject { |sum, x| sum + x }
     end
-    @result = {apd1: apd1, apd1t: apd1t, apd2: apd2, apd2t: apd2t, codes: @pause_codes }
-    return @result
+    @result = { apd1: apd1, apd1t: apd1t, apd2: apd2, apd2t: apd2t, codes: @pause_codes }
   end
 
   # Статистика за день
@@ -742,12 +654,14 @@ class Report < ApplicationRecord
 
   private
 
-  def user_permitted_ingroups(user)
-    user.role.permissions['ingroups'].join('\',\'')
+  def date_time_format
+    '%Y-%m-%d %H:%M:%S'
   end
 
-  def user_permitted_campaigns(user)
-    user.role.permissions['campaigns'].join('\',\'')
+  def calc_percent(part, total)
+    total = total.to_f
+    part = part.to_f
+    total.positive? ? (part / total * 100).round(0) : 0
   end
 
 end

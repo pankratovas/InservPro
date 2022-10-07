@@ -34,6 +34,12 @@
                                    } %>
               </div>
             </div>
+            <div class="row">
+              <div class="col">
+                <%= label_tag :campaign, 'Кампания:', class:"form-label" %>
+                <%= select_tag "[filter][campaign]", options_for_select(available_campaigns(current_user)), prompt: 'Все доступные', class: "form-control", id: "campaign_select" %>
+              </div>
+            </div>
             <br>
             <div class="text-center">
               <%= button_tag('Искать', type: "submit", class: "btn btn-primary btn-label-left") %>

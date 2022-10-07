@@ -2,6 +2,7 @@ class VicidialLog < Vicidial
   self.table_name = 'vicidial_log'
   self.primary_key = 'uniqueid'
 
+  # Метод для отчета 'Исходящие вызовы' (outbound_calls)
   def self.outbound_calls_by_filter(search_args)
     @query_parts = []
     search_args.each do |key, val|
@@ -37,6 +38,22 @@ class VicidialLog < Vicidial
                 '#{search_args[:stop_date]}' AND
                 vicidial_log.campaign_id IN
                 ('#{search_args[:campaign]}')" + @query_parts.join
+    find_by_sql(@query)
+  end
+
+  # Метод для отчета 'Общая статистика вызовов' (summary_calls)
+  def self.summary_metric_by_filter(search_args)
+    @query = "SELECT
+                COUNT(*) AS OutboundCalls
+              FROM vicidial_log
+              WHERE
+                call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}' AND
+                status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE',
+                'QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND
+                vicidial_log.campaign_id IN
+                ('#{search_args[:campaign]}')"
     find_by_sql(@query)
   end
 

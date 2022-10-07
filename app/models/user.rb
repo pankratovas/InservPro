@@ -72,7 +72,13 @@ class User < ApplicationRecord
     role.permissions['reports'].include?('100')
   end
 
+  def permitted_ingroups
+    role.permissions['ingroups']
+  end
 
+  def permitted_campaigns
+    role.permissions['campaigns']
+  end
 
 
   private

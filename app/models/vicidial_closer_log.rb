@@ -2,6 +2,7 @@ class VicidialCloserLog < Vicidial
   self.table_name = 'vicidial_closer_log'
   self.primary_key = 'closecallid'
 
+  # Метод для отчета 'Входящие вызовы' (inbound_calls)
   def self.inbound_calls_by_filter(search_args)
     @query_parts = []
     search_args.each do |key, val|
@@ -37,6 +38,32 @@ class VicidialCloserLog < Vicidial
                 '#{search_args[:stop_date]}' AND
                 vicidial_closer_log.campaign_id IN
                 ('#{search_args[:ingroup]}')" + @query_parts.join
+    find_by_sql(@query)
+  end
+
+  # Метод для отчета 'Общая статистика вызовов' (summary_calls)
+  def self.summary_metric_by_filter(search_args)
+    @query = "SELECT
+                count(*) AS TotalCalls,
+                SUM(length_in_sec) AS 'TotalLength',
+                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
+                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
+                SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
+                MAX(queue_seconds) AS Max_queue,
+                MIN(queue_seconds) AS Min_queue,
+                SUM(IF(queue_seconds <= 180, 1,0)) AS 'Queued_03',
+                SUM(IF((queue_seconds > 180 AND queue_seconds <= 360), 1,0)) AS 'Queued_36',
+                SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_6',
+                SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime',
+                SUM(wait_sec + talk_sec + dispo_sec) AS 'NonPause',
+                sub_status AS 'PauseCode'
+              FROM vicidial_closer_log
+              WHERE
+                vicidial_closer_log.call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}' AND status NOT IN ('MAXCAL','TIMEOT') AND
+                vicidial_closer_log.campaign_id IN
+                ('#{search_args[:ingroup]}')"
     find_by_sql(@query)
   end
 
