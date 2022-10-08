@@ -2,7 +2,6 @@ class VicidialLog < Vicidial
   self.table_name = 'vicidial_log'
   self.primary_key = 'uniqueid'
 
-  # Метод для отчета 'Исходящие вызовы' (outbound_calls)
   def self.outbound_calls_by_filter(search_args)
     @query_parts = []
     search_args.each do |key, val|
@@ -41,7 +40,6 @@ class VicidialLog < Vicidial
     find_by_sql(@query)
   end
 
-  # Метод для отчета 'Общая статистика вызовов' (summary_calls)
   def self.summary_metric_by_filter(search_args)
     @query = "SELECT
                 COUNT(*) AS OutboundCalls
@@ -54,6 +52,32 @@ class VicidialLog < Vicidial
                 'QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND
                 vicidial_log.campaign_id IN
                 ('#{search_args[:campaign]}')"
+    find_by_sql(@query)
+  end
+
+  def self.statuses_by_user(search_args)
+    @query = "SELECT
+                user,
+                status,
+                count(*) AS count
+              FROM vicidial_log
+              WHERE call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}' AND status NOT IN
+                ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND
+                user != 'VDAD' GROUP BY user, status ORDER BY status"
+    find_by_sql(@query)
+  end
+
+  def self.operator_calls(search_args)
+    @query = "SELECT
+                COUNT(*) AS 'Outbound'
+              FROM vicidial_log
+              WHERE
+                call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}' AND
+                user = '#{search_args[:operator]}'"
     find_by_sql(@query)
   end
 

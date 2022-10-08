@@ -41,8 +41,8 @@ class Report < ApplicationRecord
       answered_in_20: @inbound_calls['Answered20'],
       transfered: @transfer_calls['Transfered'],
       outbound: @outbound_calls['OutboundCalls'],
-      avg_total_length: calc_percent(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
-      avg_queue_length: calc_percent(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
+      avg_total_length: calc_avg(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
+      avg_queue_length: calc_avg(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
       max_queue_length: @inbound_calls['Max_queue'].to_i,
       min_queue_length: @inbound_calls['Min_queue'].to_i,
       queue_0_3: @inbound_calls['Queued_03'].to_i,
@@ -76,8 +76,8 @@ class Report < ApplicationRecord
         answered_in_20: @inbound_calls['Answered20'],
         transfered: @transfer_calls['Transfered'],
         outbound: @outbound_calls['OutboundCalls'],
-        avg_total_length: calc_percent(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
-        avg_queue_length: calc_percent(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
+        avg_total_length: calc_avg(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
+        avg_queue_length: calc_avg(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
         max_queue_length: @inbound_calls['Max_queue'].to_i,
         min_queue_length: @inbound_calls['Min_queue'].to_i,
         queue_0_3: @inbound_calls['Queued_03'].to_i,
@@ -176,387 +176,208 @@ class Report < ApplicationRecord
 
   # Статистика за день
   def yesterday_report(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = (Time.now.beginning_of_day+8.hours+45.minutes).strftime(date_time_format)
-      @stop_date = (Time.now.beginning_of_day+21.hours).strftime(date_time_format)
-    else
-      @start_date = (filter[:start_date].to_time.beginning_of_day+8.hours+45.minutes).strftime(date_time_format)
-      @stop_date = (filter[:start_date].to_time.beginning_of_day+21.hours).strftime(date_time_format)
-    end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
-    @query1 = "SELECT
-                      count(*) AS TotalCalls,
-                      SUM(length_in_sec) AS 'TotalLength',
-                      SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
-                      SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
-                      SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
-                      MAX(queue_seconds) AS Max_queue,
-                      MIN(queue_seconds) AS Min_queue,
-                      SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime'
-               FROM
-                      vicidial_closer_log
-               WHERE
-                      call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-    @result1 = VicidialCloserLog.find_by_sql(@query1)
+    filter[:start_date] = (filter[:start_date].to_time.beginning_of_day + 8.hours + 45.minutes).strftime(date_time_format)
+    filter[:stop_date] = (filter[:start_date].to_time.beginning_of_day + 21.hours).strftime(date_time_format)
+    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    @search_params = filter.compact_blank!
+    @start_date = filter[:start_date]
+    @day_calls = VicidialCloserLog.day_calls(@search_params).first
     hash = {}
-    ["08:45:00-09:59:59","10:00:00-10:59:59","11:00:00-11:59:59","12:00:00-12:59:59","13:00:00-13:59:59","14:00:00-14:59:59","15:00:00-15:59:59","16:00:00-16:59:59","17:00:00-17:59:59","18:00:00-18:59:59","19:00:00-19:59:59","20:00:00-20:59:59"].each do |i|
+    time_intervals = %w[08:45:00-09:59:59 10:00:00-10:59:59 11:00:00-11:59:59 12:00:00-12:59:59
+                        13:00:00-13:59:59 14:00:00-14:59:59 15:00:00-15:59:59 16:00:00-16:59:59
+                        17:00:00-17:59:59 18:00:00-18:59:59 19:00:00-19:59:59 20:00:00-20:59:59]
+    time_intervals.each do |i|
       t = i.split('-')
-      start_date = @start_date.split(" ")[0]+" "+t[0]
-      stop_date = @start_date.split(" ")[0]+" "+t[1]
-      @query2 = "SELECT
-                            count(*) AS TotalCalls,
-                            SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered'
-                         FROM
-                            vicidial_closer_log
-                         WHERE
-                            call_date BETWEEN '#{start_date}' AND '#{stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-      @result2 = VicidialCloserLog.find_by_sql(@query2)
-      hash[i] = {total_calls: @result2[0]["TotalCalls"], answered_calls: @result2[0]["Answered"]}
+      filter[:start_date] = "#{@start_date.split(' ')[0]} #{t[0]}"
+      filter[:stop_date] = "#{@start_date.split(' ')[0]} #{t[1]}"
+      @search_params_intervals = filter
+      @interval_calls = VicidialCloserLog.interval_calls(@search_params_intervals).first
+      hash[i] = { total_calls: @interval_calls['TotalCalls'], answered_calls: @interval_calls['Answered'] }
     end
     @result = {
-      date1: @start_date.split(" ")[0],
-      date2: @start_date.split(" ")[0],
-      total_calls: @result1[0]["TotalCalls"],
-      answered_calls: @result1[0]["Answered"],
-      lcr: @result1[0]["TotalCalls"].to_f > 0 ? ((@result1[0]["Answered"].to_f/@result1[0]["TotalCalls"].to_f)*100).round(0) : 0,
-      answered_in_20: @result1[0]["Answered20"],
-      avg_total_length: @result1[0]["TotalCalls"].to_f > 0 ? (@result1[0]["TotalLength"].to_f/@result1[0]["TotalCalls"].to_f).round(0) : 0,
-      avg_queue_length: @result1[0]["Queued"].to_f > 0 ? (@result1[0]["QueueTime"].to_f/@result1[0]["Queued"].to_f).round(0) : 0,
-      max_queue_length: @result1[0]["Max_queue"].to_i,
-      min_queue_length: @result1[0]["Min_queue"].to_i,
+      date1: @start_date.split(' ').first,
+      date2: @start_date.split(' ').first,
+      total_calls: @day_calls['TotalCalls'],
+      answered_calls: @day_calls['Answered'],
+      lcr: calc_percent(@day_calls['Answered'], @day_calls['TotalCalls']),
+      answered_in_20: @day_calls['Answered20'],
+      avg_total_length: calc_avg(@day_calls['TotalLength'], @day_calls['TotalCalls']),
+      avg_queue_length: calc_avg(@day_calls['QueueTime'], @day_calls['Queued']),
+      max_queue_length: @day_calls['Max_queue'].to_i,
+      min_queue_length: @day_calls['Min_queue'].to_i,
       hashdata: hash
     }
-    return @result
   end
 
   # Статусы по операторам
   def statuses_by_user(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime(date_time_format)
-    else
-      @stop_date = filter[:stop_date]
-    end
-    @query1 = "SELECT user, status, count(*) AS count FROM vicidial_closer_log WHERE call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND user != 'VDCL' GROUP BY user, status ORDER BY status"
-    @query2 = "SELECT user, status, count(*) AS count FROM vicidial_log WHERE call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND user != 'VDAD' GROUP BY user, status ORDER BY status"
-    @result1 = VicidialLog.find_by_sql(@query1)
-    @result2 = VicidialLog.find_by_sql(@query2)
-    result = [@result1, @result2]
-    return result
+    @search_params = filter.compact_blank!
+    @inbound_statuses = VicidialCloserLog.statuses_by_user(@search_params)
+    @outbound_statuses = VicidialLog.statuses_by_user(@search_params)
+    [@inbound_statuses, @outbound_statuses]
   end
 
   # Вызовы с разбивкой по интервалам
   def calls_by_interval(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @date = (Time.now.beginning_of_day).strftime("%Y-%m-%d")
-    else
-      @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
-    end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
+    @date = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
+    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
     data_hash = {}
-    time_intervals = ["00:00:00-08:59:59","09:00:00-11:59:59","12:00:00-14:59:59","15:00:00-17:59:59","18:00:00-20:59:59","21:00:00-23:59:59"]
+    time_intervals = %w[00:00:00-08:59:59 09:00:00-11:59:59 12:00:00-14:59:59
+                        15:00:00-17:59:59 18:00:00-20:59:59 21:00:00-23:59:59]
     time_intervals.each do |i|
       t = i.split('-')
-      start_date = @date+" "+t[0]
-      stop_date = @date+" "+t[1]
-      @query1 = "SELECT
-                        MIN(queue_seconds) AS Min_queue,
-                        AVG(queue_seconds) AS Avg_queue,
-                        MAX(queue_seconds) AS Max_queue,
-                        SUM(IF(queue_seconds BETWEEN 0 AND 180, 1,0)) AS 'Queued_0_3',
-                        SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS 'Queued_3_6',
-                        SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_m6',
-                        AVG(length_in_sec - queue_seconds) AS 'Avg_talk',
-                        SUM(length_in_sec - queue_seconds) AS 'Sum_talk',
-                        count(*) AS 'TotalCalls',
-                        SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered'
-                 FROM
-                        vicidial_closer_log
-                 WHERE
-                        call_date BETWEEN '#{start_date}' AND '#{stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-      @result1 = VicidialCloserLog.find_by_sql(@query1)
+      filter[:start_date] = "#{@date} #{t[0]}"
+      filter[:stop_date] = "#{@date} #{t[1]}"
+      @search_params = filter.compact_blank!
+      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
       data_hash[i] = {
-        min_queue: @result1[0]["Min_queue"].nil? ? 0 : @result1[0]["Min_queue"].round(0),
-        avg_queue: @result1[0]["Avg_queue"].nil? ? 0 : @result1[0]["Avg_queue"].round(0),
-        max_queue: @result1[0]["Max_queue"].nil? ? 0 : @result1[0]["Max_queue"].round(0),
-        queue_0_3: @result1[0]["Queued_0_3"].nil? ? 0 : @result1[0]["Queued_0_3"].round(0),
-        queue_3_6: @result1[0]["Queued_3_6"].nil? ? 0 : @result1[0]["Queued_3_6"].round(0),
-        queue_m6: @result1[0]["Queued_m6"].nil? ? 0 : @result1[0]["Queued_m6"].round(0),
-        avg_talk: @result1[0]["Avg_talk"].nil? ? 0 : @result1[0]["Avg_talk"].round(0),
-        total_calls: @result1[0]["TotalCalls"].nil? ? 0 : @result1[0]["TotalCalls"].round(0),
-        answered: @result1[0]["Answered"].nil? ? 0 : @result1[0]["Answered"].round(0),
-        effectivity: @result1[0]["Sum_talk"].nil? ? 0 : (@result1[0]["Answered"].to_f/(@result1[0]["Sum_talk"].to_f/3600)).round(1)
+        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
+        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
+        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
+        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
+        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
+        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
+        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
+        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
+        answered: @inbound_calls['Answered'].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
       }
     end
     @result = data_hash
-    return @result
   end
 
   # Статистика по оператору за период
   def operator_statistics(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime(date_time_format)
-    else
-      @stop_date = filter[:stop_date]
-    end
-    if filter.blank? || filter[:operator].blank?
-      @operator = VicidialUser.first.user
-    else
-      @operator = filter[:operator]
-    end
-    @query1 = "SELECT
-                        SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) AS 'Answered',
-                        SUM(IF(term_reason = 'AGENT',1,0)) AS 'Term_by_oper'
-               FROM
-                        vicidial_closer_log
-               WHERE
-                        call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT') AND user = '#{@operator}'"
-    @query2 = "SELECT
-                        COUNT(*) AS 'Outbound'
-               FROM
-                        vicidial_log
-               WHERE
-                        call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND user = '#{@operator}'"
-    @query3 = "SELECT
-                        SUM(IF(talk_sec > 300, 1,0)) AS 'Talk_m5',
-                        MAX(talk_sec) AS 'Max_talk',
-                        AVG(talk_sec) AS 'Avg_talk',
-                        SUM(talk_sec+pause_sec+dispo_sec+wait_sec+dead_sec) AS 'Total_time',
-                        SUM(talk_sec) AS 'Talk_time',
-                        SUM(pause_sec) AS 'Pause_time',
-                        SUM(IF(sub_status = 'O',pause_sec,0)) AS  'O_pause',
-                        SUM(IF(sub_status = 'PP',pause_sec,0)) AS 'PP_pause',
-                        SUM(IF(sub_status = 'OG',pause_sec,0)) AS 'OG_pause',
-                        SUM(IF(sub_status = 'VD',pause_sec,0)) AS 'VD_pause',
-                        SUM(IF(sub_status = 'ED',pause_sec,0)) AS 'ED_pause',
-                        SUM(dispo_sec) AS 'Dispo_time'
-                FROM
-                        vicidial_agent_log
-                WHERE
-                        event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND wait_sec<65000 AND talk_sec<65000 AND dispo_sec<65000 AND campaign_id = 'CCENTER' AND status IS NOT NULL AND user = '#{@operator}'"
-    @query4 = "SELECT
-                        SUM(IF(call_type = 'XFER_3WAY',1,0)) AS 'Transfer_total',
-                        SUM(IF(call_type = 'XFER_3WAY' AND  number_dialed LIKE 'Local/88%' ,1,0)) AS 'Transfer_oper'
-               FROM
-                        user_call_log
-               WHERE
-                        call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND user='#{@operator}'"
-    @result1 = VicidialCloserLog.find_by_sql(@query1)
-    @result2 = VicidialCloserLog.find_by_sql(@query2)
-    @result3 = VicidialCloserLog.find_by_sql(@query3)
-    @result4 = VicidialCloserLog.find_by_sql(@query4)
+    filter[:operator] = VicidialUser.first.user if filter[:operator].blank?
+    @search_params = filter.compact_blank!
+    @inbound_calls = VicidialCloserLog.operator_calls(@search_params).first
+    @outbound_calls = VicidialLog.operator_calls(@search_params).first
+    @operator_metrics = VicidialAgentLog.agent_metrics(@search_params).first
+    @operator_transfers = VicidialUserCallLog.operator_transfers(@search_params).first
     data_hash = {
-      user: @operator,
-      answered: @result1[0]["Answered"].to_i,
-      outbound: @result2[0]["Outbound"].to_i,
-      talk_m5: @result3[0]["Talk_m5"].to_i,
-      max_talk: @result3[0]["Max_talk"].to_i,
-      avg_talk: @result3[0]["Avg_talk"].to_i,
-      term_by_oper: @result1[0]["Term_by_oper"],
-      transfer_total: @result4[0]["Transfer_total"].to_i,
-      transfer_oper: @result4[0]["Transfer_oper"].to_i,
-      total_time: @result3[0]["Total_time"],
-      talk_time: @result3[0]["Talk_time"],
-      pause_time: @result3[0]["Pause_time"],
-      o_pause: @result3[0]["O_pause"],
-      pp_pause: @result3[0]["PP_pause"],
-      og_pause: @result3[0]["OG_pause"],
-      vd_pause: @result3[0]["VD_pause"],
-      ed_pause: @result3[0]["ED_pause"],
-      dispo_time: @result3[0]["Dispo_time"],
-      effectivity: @result3[0]["Talk_time"].nil? ? 0 : (@result1[0]["Answered"].to_f/(@result3[0]["Talk_time"].to_f/3600)).round(1)
+      user: filter[:operator],
+      answered: @inbound_calls['Answered'].to_i,
+      outbound: @outbound_calls['Outbound'].to_i,
+      talk_m5: @operator_metrics['Talk_m5'].to_i,
+      max_talk: @operator_metrics['Max_talk'].to_i,
+      avg_talk: @operator_metrics['Avg_talk'].to_i,
+      term_by_oper: @inbound_calls['Term_by_oper'],
+      transfer_total: @operator_transfers['Transfer_total'].to_i,
+      transfer_oper: @operator_transfers['Transfer_oper'].to_i,
+      total_time: @operator_metrics['Total_time'],
+      talk_time: @operator_metrics['Talk_time'],
+      pause_time: @operator_metrics['Pause_time'],
+      o_pause: @operator_metrics['O_pause'],
+      pp_pause: @operator_metrics['PP_pause'],
+      og_pause: @operator_metrics['OG_pause'],
+      vd_pause: @operator_metrics['VD_pause'],
+      ed_pause: @operator_metrics['ED_pause'],
+      dispo_time: @operator_metrics['Dispo_time'],
+      effectivity: calc_effectivity(@inbound_calls['Answered'], @operator_metrics['Talk_time'])
     }
     @result = data_hash
-    return @result
   end
 
   # Сводная статистика по операторам
   def all_operator_statistics(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
-    else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime(date_time_format)
-    else
-      @stop_date = filter[:stop_date]
-    end
     data_hash = {}
     VicidialUser.all.order(:full_name).each do |operator|
-      @query1 = "SELECT
-                          SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) AS 'Answered',
-                          SUM(IF(term_reason = 'AGENT',1,0)) AS 'Term_by_oper'
-                 FROM
-                          vicidial_closer_log
-                 WHERE
-                          call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND status NOT IN ('MAXCAL','TIMEOT') AND user = '#{operator.user}'"
-      @query2 = "SELECT
-                          COUNT(*) AS 'Outbound'
-                 FROM
-                          vicidial_log
-                 WHERE
-                          call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND user = '#{operator.user}'"
-      @query3 = "SELECT
-                          SUM(IF(talk_sec > 300, 1,0)) AS 'Talk_m5',
-                          MAX(talk_sec) AS 'Max_talk',
-                          AVG(talk_sec) AS 'Avg_talk',
-                          SUM(talk_sec+pause_sec+dispo_sec+wait_sec+dead_sec) AS 'Total_time',
-                          SUM(talk_sec) AS 'Talk_time',
-                          SUM(pause_sec) AS 'Pause_time',
-                          SUM(IF(sub_status = 'O',pause_sec,0)) AS  'O_pause',
-                          SUM(IF(sub_status = 'PP',pause_sec,0)) AS 'PP_pause',
-                          SUM(IF(sub_status = 'OG',pause_sec,0)) AS 'OG_pause',
-                          SUM(IF(sub_status = 'VD',pause_sec,0)) AS 'VD_pause',
-                          SUM(IF(sub_status = 'ED',pause_sec,0)) AS 'ED_pause',
-                          SUM(dispo_sec) AS 'Dispo_time'
-                  FROM
-                          vicidial_agent_log
-                  WHERE
-                          event_time BETWEEN '#{@start_date}' AND '#{@stop_date}' AND pause_sec<65000 AND wait_sec<65000 AND talk_sec<65000 AND dispo_sec<65000 AND campaign_id = 'CCENTER' AND status IS NOT NULL AND user = '#{operator.user}'"
-      @query4 = "SELECT
-                          SUM(IF(call_type = 'XFER_3WAY',1,0)) AS 'Transfer_total',
-                          SUM(IF(call_type = 'XFER_3WAY' AND  number_dialed LIKE 'Local/88%' ,1,0)) AS 'Transfer_oper'
-                 FROM
-                          user_call_log
-                 WHERE
-                          call_date BETWEEN '#{@start_date}' AND '#{@stop_date}' AND user='#{operator.user}'"
-      @result1 = VicidialCloserLog.find_by_sql(@query1)
-      @result2 = VicidialCloserLog.find_by_sql(@query2)
-      @result3 = VicidialCloserLog.find_by_sql(@query3)
-      @result4 = VicidialCloserLog.find_by_sql(@query4)
+      filter[:operator] = operator.user
+      @search_params = filter.compact_blank!
+      @inbound_calls = VicidialCloserLog.operator_calls(@search_params).first
+      @outbound_calls = VicidialLog.operator_calls(@search_params).first
+      @operator_metrics = VicidialAgentLog.agent_metrics(@search_params).first
+      @operator_transfers = VicidialUserCallLog.operator_transfers(@search_params).first
       data_hash[operator.user] = {
-        answered: @result1[0]["Answered"].to_i,
-        outbound: @result2[0]["Outbound"].to_i,
-        talk_m5: @result3[0]["Talk_m5"].to_i,
-        max_talk: @result3[0]["Max_talk"].to_i,
-        avg_talk: @result3[0]["Avg_talk"].to_i,
-        term_by_oper: @result1[0]["Term_by_oper"].to_i,
-        transfer_total: @result4[0]["Transfer_total"].to_i,
-        transfer_oper: @result4[0]["Transfer_oper"].to_i,
-        total_time: @result3[0]["Total_time"],
-        talk_time: @result3[0]["Talk_time"],
-        pause_time: @result3[0]["Pause_time"],
-        o_pause: @result3[0]["O_pause"],
-        pp_pause: @result3[0]["PP_pause"],
-        og_pause: @result3[0]["OG_pause"],
-        vd_pause: @result3[0]["VD_pause"],
-        ed_pause: @result3[0]["ED_pause"],
-        dispo_time: @result3[0]["Dispo_time"],
-        effectivity: @result3[0]["Talk_time"].nil? ? 0 : (@result1[0]["Answered"].to_f/(@result3[0]["Talk_time"].to_f/3600)).round(1)
+        answered: @inbound_calls['Answered'].to_i,
+        outbound: @outbound_calls['Outbound'].to_i,
+        talk_m5: @operator_metrics['Talk_m5'].to_i,
+        max_talk: @operator_metrics['Max_talk'].to_i,
+        avg_talk: @operator_metrics['Avg_talk'].to_i,
+        term_by_oper: @inbound_calls['Term_by_oper'],
+        transfer_total: @operator_transfers['Transfer_total'].to_i,
+        transfer_oper: @operator_transfers['Transfer_oper'].to_i,
+        total_time: @operator_metrics['Total_time'],
+        talk_time: @operator_metrics['Talk_time'],
+        pause_time: @operator_metrics['Pause_time'],
+        o_pause: @operator_metrics['O_pause'],
+        pp_pause: @operator_metrics['PP_pause'],
+        og_pause: @operator_metrics['OG_pause'],
+        vd_pause: @operator_metrics['VD_pause'],
+        ed_pause: @operator_metrics['ED_pause'],
+        dispo_time: @operator_metrics['Dispo_time'],
+        effectivity: calc_effectivity(@inbound_calls['Answered'], @operator_metrics['Talk_time'])
       }
     end
     @result = data_hash
-    return @result
   end
 
   # Почасовой отчет по вызовам за день
   def calls_by_hour(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @date = (Time.now.beginning_of_day).strftime("%Y-%m-%d")
-    else
-      @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
-    end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
+    filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
+    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    @date = filter[:start_date]
     data_hash = {}
-    time_intervals = ["00:00:00-00:59:59","01:00:00-01:59:59","02:00:00-02:59:59","03:00:00-03:59:59","04:00:00-04:59:59","05:00:00-05:59:59",
-                      "06:00:00-06:59:59","07:00:00-07:59:59","08:00:00-08:59:59","09:00:00-09:59:59","10:00:00-10:59:59","11:00:00-11:59:59",
-                      "12:00:00-12:59:59","13:00:00-13:59:59","14:00:00-14:59:59","15:00:00-15:59:59","16:00:00-16:59:59","17:00:00-17:59:59",
-                      "18:00:00-18:59:59","19:00:00-19:59:59","20:00:00-20:59:59","21:00:00-21:59:59","22:00:00-22:59:59","23:00:00-23:59:59"]
+    time_intervals = %w[00:00:00-00:59:59 01:00:00-01:59:59 02:00:00-02:59:59
+                        03:00:00-03:59:59 04:00:00-04:59:59 05:00:00-05:59:59
+                        06:00:00-06:59:59 07:00:00-07:59:59 08:00:00-08:59:59
+                        09:00:00-09:59:59 10:00:00-10:59:59 11:00:00-11:59:59
+                        12:00:00-12:59:59 13:00:00-13:59:59 14:00:00-14:59:59
+                        15:00:00-15:59:59 16:00:00-16:59:59 17:00:00-17:59:59
+                        18:00:00-18:59:59 19:00:00-19:59:59 20:00:00-20:59:59
+                        21:00:00-21:59:59 22:00:00-22:59:59 23:00:00-23:59:59]
     time_intervals.each do |i|
       t = i.split('-')
-      start_date = @date+" "+t[0]
-      stop_date = @date+" "+t[1]
-      @query1 = "SELECT
-                        MIN(queue_seconds) AS Min_queue,
-                        AVG(queue_seconds) AS Avg_queue,
-                        MAX(queue_seconds) AS Max_queue,
-                        SUM(IF(queue_seconds BETWEEN 0 AND 180, 1,0)) AS 'Queued_0_3',
-                        SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS 'Queued_3_6',
-                        SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_m6',
-                        AVG(length_in_sec - queue_seconds) AS 'Avg_talk',
-                        SUM(length_in_sec - queue_seconds) AS 'Sum_talk',
-                        count(*) AS 'TotalCalls',
-                        SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered'
-                 FROM
-                        vicidial_closer_log
-                 WHERE
-                        call_date BETWEEN '#{start_date}' AND '#{stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-      @result1 = VicidialCloserLog.find_by_sql(@query1)
+      filter[:start_date] = "#{@date} #{t[0]}"
+      filter[:stop_date] = "#{@date} #{t[1]}"
+      @search_params = filter.compact_blank!
+      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
       data_hash[i] = {
-        min_queue: @result1[0]["Min_queue"].nil? ? 0 : @result1[0]["Min_queue"].round(0),
-        avg_queue: @result1[0]["Avg_queue"].nil? ? 0 : @result1[0]["Avg_queue"].round(0),
-        max_queue: @result1[0]["Max_queue"].nil? ? 0 : @result1[0]["Max_queue"].round(0),
-        queue_0_3: @result1[0]["Queued_0_3"].nil? ? 0 : @result1[0]["Queued_0_3"].round(0),
-        queue_3_6: @result1[0]["Queued_3_6"].nil? ? 0 : @result1[0]["Queued_3_6"].round(0),
-        queue_m6: @result1[0]["Queued_m6"].nil? ? 0 : @result1[0]["Queued_m6"].round(0),
-        avg_talk: @result1[0]["Avg_talk"].nil? ? 0 : @result1[0]["Avg_talk"].round(0),
-        total_calls: @result1[0]["TotalCalls"].nil? ? 0 : @result1[0]["TotalCalls"].round(0),
-        answered: @result1[0]["Answered"].nil? ? 0 : @result1[0]["Answered"].round(0),
-        effectivity: @result1[0]["Sum_talk"].nil? ? 0 : (@result1[0]["Answered"].to_f/(@result1[0]["Sum_talk"].to_f/3600)).round(1)
+        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
+        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
+        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
+        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
+        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
+        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
+        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
+        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
+        answered: @inbound_calls['Answered'].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
       }
     end
     @result = data_hash
-    return @result
   end
 
   # Отчет по КЦ за сутки
   def cc_daily(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @date = (Time.now.beginning_of_day).strftime("%Y-%m-%d")
-    else
-      @date = (filter[:start_date].to_time.beginning_of_day).strftime("%Y-%m-%d")
-    end
-    @ingroup_query = " AND campaign_id IN (#{user.role.permissions["ingroups"].to_s[1..-2]})"
+    filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
+    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    @date = filter[:start_date]
     data_hash = {}
-    time_intervals = ["00:00:00-08:59:59","09:00:00-17:59:59","18:00:00-23:59:59"]
+    time_intervals = %w[00:00:00-08:59:59 09:00:00-17:59:59 18:00:00-23:59:59]
     time_intervals.each do |i|
       t = i.split('-')
-      start_date = @date+" "+t[0]
-      stop_date = @date+" "+t[1]
-      @query1 = "SELECT
-                        MIN(queue_seconds) AS Min_queue,
-                        AVG(queue_seconds) AS Avg_queue,
-                        MAX(queue_seconds) AS Max_queue,
-                        SUM(IF(queue_seconds BETWEEN 0 AND 180, 1,0)) AS 'Queued_0_3',
-                        SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS 'Queued_3_6',
-                        SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_m6',
-                        AVG(length_in_sec - queue_seconds) AS 'Avg_talk',
-                        SUM(length_in_sec - queue_seconds) AS 'Sum_talk',
-                        count(*) AS 'TotalCalls',
-                        SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered'
-                 FROM
-                        vicidial_closer_log
-                 WHERE
-                        call_date BETWEEN '#{start_date}' AND '#{stop_date}' AND status NOT IN ('MAXCAL','TIMEOT')"+@ingroup_query
-      @result1 = VicidialCloserLog.find_by_sql(@query1)
+      filter[:start_date] = "#{@date} #{t[0]}"
+      filter[:stop_date] = "#{@date} #{t[1]}"
+      @search_params = filter.compact_blank!
+      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
       data_hash[i] = {
-        min_queue: @result1[0]["Min_queue"].nil? ? 0 : @result1[0]["Min_queue"].round(0),
-        avg_queue: @result1[0]["Avg_queue"].nil? ? 0 : @result1[0]["Avg_queue"].round(0),
-        max_queue: @result1[0]["Max_queue"].nil? ? 0 : @result1[0]["Max_queue"].round(0),
-        queue_0_3: @result1[0]["Queued_0_3"].nil? ? 0 : @result1[0]["Queued_0_3"].round(0),
-        queue_3_6: @result1[0]["Queued_3_6"].nil? ? 0 : @result1[0]["Queued_3_6"].round(0),
-        queue_m6: @result1[0]["Queued_m6"].nil? ? 0 : @result1[0]["Queued_m6"].round(0),
-        avg_talk: @result1[0]["Avg_talk"].nil? ? 0 : @result1[0]["Avg_talk"].round(0),
-        total_calls: @result1[0]["TotalCalls"].nil? ? 0 : @result1[0]["TotalCalls"].round(0),
-        answered: @result1[0]["Answered"].nil? ? 0 : @result1[0]["Answered"].round(0),
-        effectivity: @result1[0]["Sum_talk"].nil? ? 0 : (@result1[0]["Answered"].to_f/(@result1[0]["Sum_talk"].to_f/3600)).round(1)
+        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
+        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
+        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
+        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
+        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
+        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
+        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
+        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
+        answered: @inbound_calls['Answered'].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
       }
     end
     @result = data_hash
-    return @result
   end
 
-  # Навыки операторов
+  # Навыки операторов !!!!!!!!!! только ФСС
   def agent_skills(user, filter = params[:filter])
     @ingroups = ['78122412000','callbk_oper','common','COVID2019','inbound','JE','KARELIYA','LENOBLAST','MEDIKI','SURDO','TSR','VNIM']
     @agents = VicidialUser.pluck(:user)
@@ -581,7 +402,7 @@ class Report < ApplicationRecord
     return @result
   end
 
-  # Вызовы по регионам
+  # Вызовы по регионам !!!!!!!!! только ФСС
   def calls_by_regions(user, filter = params[:filter])
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime(date_time_format)
@@ -605,7 +426,7 @@ class Report < ApplicationRecord
     return @result
   end
 
-  # Статусы по регионам
+  # Статусы по регионам !!!!!!!!!!! только ФСС
   def statuses_by_regions(user, filter = params[:filter])
     if filter.blank? || filter[:start_date].blank?
       @start_date = Time.now.beginning_of_day.strftime(date_time_format)
@@ -654,6 +475,10 @@ class Report < ApplicationRecord
 
   private
 
+  def date_format
+    '%Y-%m-%d'
+  end
+
   def date_time_format
     '%Y-%m-%d %H:%M:%S'
   end
@@ -662,6 +487,18 @@ class Report < ApplicationRecord
     total = total.to_f
     part = part.to_f
     total.positive? ? (part / total * 100).round(0) : 0
+  end
+
+  def calc_avg(part, total)
+    total = total.to_f
+    part = part.to_f
+    total.positive? ? (part / total).round(0) : 0
+  end
+
+  def calc_effectivity(part, total)
+    total = total.to_f
+    part = part.to_f
+    total.positive? ? (part / total / 3600).round(1) : 0
   end
 
 end

@@ -14,4 +14,17 @@ class VicidialUserCallLog < Vicidial
     find_by_sql(@query)
   end
 
+  def self.operator_transfers(search_args)
+    @query = "SELECT
+                SUM(IF(call_type = 'XFER_3WAY',1,0)) AS 'Transfer_total',
+                SUM(IF(call_type = 'XFER_3WAY' AND  number_dialed LIKE 'Local/88%' ,1,0)) AS 'Transfer_oper'
+              FROM user_call_log
+              WHERE
+                call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}' AND
+                user = '#{search_args[:operator]}'"
+    find_by_sql(@query)
+  end
+
 end
