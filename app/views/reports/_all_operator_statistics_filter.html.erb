@@ -19,25 +19,10 @@
         <div class="container-fluid">
           <%= form_tag report_path(@report), method: :get, class: "form", role: "form" do %>
             <div class="row">
-              <div class="col">
-                <%= label_tag :call_date, 'Начальная дата:', class: "form-label" %>
-                <%= text_field_tag "[filter][start_date]", nil, class: "form-control",
-                                   data: { controller:  "flatpickr",
-                                           flatpickr_default_date: Time.now.beginning_of_day
-                                   } %>
-              </div>
-              <div class="col">
-                <%= label_tag :call_date, 'Конечная дата:', class: "form-label" %>
-                <%= text_field_tag "[filter][stop_date]", nil, class: "form-control",
-                                   data: { controller:  "flatpickr",
-                                           flatpickr_default_date: Time.now.end_of_day
-                                   } %>
-              </div>
+              <%= render 'reports/filter_parts/filter_start_date' %>
+              <%= render 'reports/filter_parts/filter_stop_date' %>
             </div>
-            <br>
-            <div class="text-center">
-              <%= button_tag('Искать', type: "submit", class: "btn btn-primary btn-label-left") %>
-            </div>
+            <%= render 'reports/filter_parts/filter_submit_button' %>
           <% end %>
         </div>
       </div>

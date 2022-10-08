@@ -1,0 +1,4 @@
+<div class="col">
+  <%= label_tag :operator, 'Оператор:', class: "form-label" %>
+  <%= select_tag "[filter][operator]", options_for_select(available_operators), prompt: 'Все доступные', class: "form-control", id: "operator_select" %>
+</div>

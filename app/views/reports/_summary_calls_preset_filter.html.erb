@@ -19,18 +19,10 @@
         <div class="container-fluid">
           <%= form_tag report_path(@report), method: :get, class: "form", role: "form" do %>
             <div class="row">
-              <div class="col">
-                <%= label_tag :campaign, 'Кампания:', class:"control-label" %>
-                <%= select_tag "[filter][campaign]", options_for_select(available_campaigns(current_user)), prompt: 'Все доступные', class: "form-control", id: "campaign_select" %>
-              </div>
-              <div class="col">
-                <%= label_tag :ingroup, 'Ингруппа:', class:"control-label" %>
-                <%= select_tag "[filter][ingroup]", options_for_select(available_ingroups(current_user)), prompt: 'Все доступные', class: "form-control", id: "ingroup_select" %>
-              </div>
+              <%= render 'reports/filter_parts/filter_campaign' %>
+              <%= render 'reports/filter_parts/filter_ingroup' %>
             </div>
-            <div class="text-center">
-              <%= button_tag('Искать', type: "submit", class: "btn btn-primary btn-label-left") %>
-            </div>
+            <%= render 'reports/filter_parts/filter_submit_button' %>
           <% end %>
         </div>
       </div>

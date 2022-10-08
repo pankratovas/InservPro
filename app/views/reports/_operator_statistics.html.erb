@@ -1,4 +1,6 @@
 <p>Оператор <%= VicidialUser.find_by_user(@result[:user]).full_name %> (<%= @result[:user] %>)</p>
+<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
+  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>

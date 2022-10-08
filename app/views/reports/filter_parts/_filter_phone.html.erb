@@ -1,0 +1,4 @@
+<div class="col">
+  <%= label_tag :phone, 'Телефон:', class: "form-label" %>
+  <%= text_field_tag "[filter][phone]", params[:filter][:phone] ||= nil, class: "form-control", id: "phone_select" %>
+</div>

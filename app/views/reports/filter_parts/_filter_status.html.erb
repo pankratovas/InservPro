@@ -1,0 +1,4 @@
+<div class="col">
+  <%= label_tag :status, 'Статус:', class: "form-label" %>
+  <%= select_tag "[filter][status]", options_for_select(available_statuses(current_user)), prompt: 'Все доступные', class: "form-control", id: "status_select" %>
+</div>

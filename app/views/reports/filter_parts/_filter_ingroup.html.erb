@@ -1,0 +1,4 @@
+<div class="col">
+  <%= label_tag :ingroup, 'Ингруппа:', class: "form-label" %>
+  <%= select_tag "[filter][ingroup]", options_for_select(available_ingroups(current_user)), prompt: 'Все доступные', class: "form-control", id: "ingroup_select" %>
+</div>

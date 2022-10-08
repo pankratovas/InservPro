@@ -1,18 +1,9 @@
 <%
-if params[:filter].blank? || params[:filter][:start_date].blank?
-  @start_date = I18n.localize(Time.now.beginning_of_day, format: '%d %b %Y %H:%M')
-else
-  @start_date = I18n.localize(params[:filter][:start_date].to_time, format: '%d %b %Y %H:%M')
-end
-if params[:filter].blank? || params[:filter][:stop_date].blank?
-  @stop_date = I18n.localize(Time.now.end_of_day, format: '%d %b %Y %H:%M' )
-else
-  @stop_date = I18n.localize(params[:filter][:stop_date].to_time, format: '%d %b %Y %H:%M' )
-end
 operators = {}
 VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
 %>
-<p>Статистика по операторам за период с <b><%= @start_date %></b> по <b><%= @stop_date %></b>:</p>
+<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
+  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
@@ -69,7 +60,8 @@ VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
   </tbody>
 </table>
 
-<p>Статистика по кодам паузы за период с <b><%= @start_date %></b> по <b><%= @stop_date %></b>:</p>
+<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
+  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
