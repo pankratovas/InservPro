@@ -1,0 +1,61 @@
+<%
+  operators = {}
+  VicidialUser.select(:user, :full_name).map { |u| operators[u.user] = u.full_name }
+%>
+<p>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
+<table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
+  <thead class="thead-light">
+    <tr>
+        <th><%= t(:operators) %></th>
+        <th><%= t(:amount_inbound_calls) %></th>
+        <th><%= t(:amount_outbound_calls) %></th>
+        <th><%= t(:talk_duration) %> <%= t(:more_5_mih) %></th>
+        <th><%= t(:max_talk) %></th>
+        <th><%= t(:avg_talk) %>
+        <th><%= t(:terminate_call) %></th>
+        <th><%= t(:transfers_all) %></th>
+        <th><%= t(:transfers_call_center) %></th>
+        <th><%= t(:logged_time) %></th>
+        <th><%= t(:talk) %></th>
+        <th><%= t(:on_pause) %></th>
+        <th><%= t(:on_pause) %> Обед</th>
+        <th><%= t(:on_pause) %> Плановый перерыв</th>
+        <th><%= t(:on_pause) %> Опрос граждан</th>
+        <th><%= t(:on_pause) %> Внесение данных</th>
+        <th><%= t(:on_pause) %> Обучение</th>
+        <th><%= t(:on_pause) %> в статусе Постобработка</th>
+        <th><%= t(:effectivity) %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @result.keys.each do |operator| %>
+      <tr>
+          <td><%= operators[operator] %> (<%= operator %>)</td>
+          <td><%= @result[operator][:answered] %></td>
+          <td><%= @result[operator][:outbound] %></td>
+          <td><%= @result[operator][:talk_m5] %></td>
+          <td><%= seconds_to_ms(@result[operator][:max_talk]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:avg_talk]) %></td>
+          <td><%= @result[operator][:term_by_oper] %></td>
+          <td><%= @result[operator][:transfer_total] %></td>
+          <td><%= @result[operator][:transfer_oper] %></td>
+          <td><%= seconds_to_ms(@result[operator][:total_time]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:talk_time]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:pause_time]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:o_pause]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:pp_pause]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:og_pause]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:vd_pause]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:ed_pause]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:dispo_time]) %></td>
+          <td><%= @result[operator][:effectivity] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

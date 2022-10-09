@@ -1,4 +1,5 @@
 <div class="col">
-  <%= label_tag :campaign, 'Кампания:', class:"form-label" %>
-  <%= select_tag "[filter][campaign]", options_for_select(available_campaigns(current_user)), prompt: 'Все доступные', class: "form-control", id: "campaign_select" %>
+  <%= label_tag :campaign, t(:campaign), class:"form-label" %>
+  <%= select_tag "[filter][campaign]", options_for_select(available_campaigns(current_user)),
+                 prompt: t(:all_permitted), class: "form-control", id: "campaign_select" %>
 </div>

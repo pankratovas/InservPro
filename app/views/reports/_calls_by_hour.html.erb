@@ -2,7 +2,7 @@
 <table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
   <thead class="thead-light">
     <tr>
-      <th>Параметр</th>
+      <th><%= t(:parametr) %></th>
       <% @intervals.each do |i| %>
         <th><%= i %></th>
       <% end %>
@@ -10,61 +10,61 @@
   </thead>
   <tbody>
     <tr>
-      <td>Минимальное время ожидания</td>
+      <td><%= t(:min_wait) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:min_queue] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Среднее время ожидания</td>
+      <td><%= t(:avg_wait) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:avg_queue] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Максимальное время ожидания</td>
+      <td><%= t(:max_wait) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:max_queue] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Время ожидания 0-3 минут</td>
+      <td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:queue_0_3] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Время ожидания 3-6 минут</td>
+      <td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:queue_3_6] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Время ожидания более 6 минут</td>
+      <td><%= t(:wait) %> <%= t(:more_6_min) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:queue_m6] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Среднее время обработки вызова</td>
+      <td><%= t(:avg_talk) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:avg_talk] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Количество поступивших вызовов</td>
+      <td><%= t(:amount_inbound_calls) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:total_calls] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Количество принятых вызовов</td>
+      <td><%= t(:answered_calls) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:answered] %></td>
       <% end %>
     </tr>
     <tr>
-      <td>Эффективность работы</td>
+      <td><%= t(:effectivity) %></td>
       <% @intervals.each do |i| %>
         <td><%= @result[i][:effectivity] %></td>
       <% end %>

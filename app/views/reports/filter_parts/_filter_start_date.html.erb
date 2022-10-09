@@ -1,5 +1,5 @@
 <div class="col">
-  <%= label_tag :call_date, 'Начальная дата:', class: "form-label" %>
+  <%= label_tag :call_date, t(:start_date), class: "form-label" %>
   <%= text_field_tag "[filter][start_date]", nil, class: "form-control",
                      data: { controller:  "flatpickr",
                              flatpickr_default_date: params[:filter][:start_date]

@@ -2,20 +2,26 @@
   ingroups = VicidialInboundGroup.all_map_hash
   statuses = VicidialCampaign.all_statuses_map
 %>
-<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
-  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
+<p>
+  <%= t(:amount_inbound_calls) %>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <% @result = @result.paginate(page: params[:page], per_page: 10) %>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
   <tr>
-    <th>№</th>
-    <th>Ингруппа</th>
-    <th>Телефон</th>
-    <th>Дата вызова</th>
-    <th>Статус</th>
-    <th>Длительность</th>
-    <th>Оператор</th>
-    <th colspan="2">Запись</th>
+    <th><%= t(:lead) %></th>
+    <th><%= t(:ingroup) %></th>
+    <th><%= t(:phone) %></th>
+    <th><%= t(:call_date) %></th>
+    <th><%= t(:status) %></th>
+    <th><%= t(:duration) %></th>
+    <th><%= t(:operator) %></th>
+    <th colspan="2"><%= t(:record) %></th>
   </tr>
   </thead>
   <tbody>

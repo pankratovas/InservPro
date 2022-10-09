@@ -1,5 +1,12 @@
-<p>Входящие вызовы за период с <b><%= localize_datetime_str(params[:filter][:start_date]) %></b>
-  по <b><%= localize_datetime_str(params[:filter][:stop_date]) %></b>:</p>
+<p>
+  <%= t(:amount_inbound_calls) %>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
+<%
   t1 = {}
   @result[0].each do |row|
     t1[[row[:user],row[:status]]] = row[:count]
@@ -8,7 +15,7 @@
 <table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
   <thead class="thead-light">
     <tr>
-      <th>Оператор</th>
+      <th><%= t(:operator) %></th>
       <% @result[0].map{|x| x.status}.uniq.each do |s| %>
         <th><%= s %></th>
       <% end %>
@@ -27,10 +34,14 @@
     <% end %>
   </tbody>
 </table>
-
-
-<p>Исходящие вызовы за период с <b><%= localize_datetime_str(params[:filter][:start_date]) %></b>
-  по <b><%= localize_datetime_str(params[:filter][:stop_date]) %></b>:</p>
+<p>
+  <%= t(:amount_outbound_calls) %>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <%
   t2 = {}
   @result[1].each do |row|
@@ -40,7 +51,7 @@
 <table class="table table-striped table-bordered table-hover table-heading no-border-bottom table-responsive">
   <thead class="thead-light">
     <tr>
-      <th>Оператор</th>
+      <th><%= t(:operator) %></th>
       <% @result[1].map{|x| x.status}.uniq.each do |s| %>
         <th><%= s %></th>
       <% end %>

@@ -1,24 +1,25 @@
-<p>Общие данные по вызовам за период с <b><%= localize_datetime_str(params[:filter][:start_date]) %></b>
-  по <b><%= localize_datetime_str(params[:filter][:stop_date]) %></b></p>
+<p>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
-    <tr><th>Параметр</th><th>Значение</th></tr>
+    <tr><th><%= t(:parametr) %></th><th><%= t(:value) %></th></tr>
   </thead>
   <tbody>
-    <tr><td>Минимальное время ожидания</td><td><%= seconds_to_ms(@result[:min_queue_length]) %></td></tr>
-    <tr><td>Среднее время ожидания</td><td><%= seconds_to_ms(@result[:avg_queue_length]) %></td></tr>
-    <tr><td>Максимальное время ожидания</td><td><%= seconds_to_ms(@result[:max_queue_length]) %></td></tr>
-    <tr><td>Время ожидания 0-3 минут </td><td><%= @result[:queue_0_3] %> ед.</td></tr>
-    <tr><td>Время ожидания 3-6 минут</td><td><%= @result[:queue_3_6] %> ед.</td></tr>
-    <tr><td>Время ожидания более 6 минут</td><td><%= @result[:queue_6] %> ед.</td></tr>
-    <tr><td>Среднее время обработки вызова</td><td><%= seconds_to_ms(@result[:avg_total_length]) %></td></tr>
-    <tr><td>Количество поступивших вызовов</td><td><%= @result[:total_calls] %> ед.</td></tr>
-    <tr><td>Количество принятых вызовов</td><td><%= @result[:answered_calls] %> ед.</td></tr>
-<!--
-    <tr><td>Кол-во принятых. звонков за 20 сек</td><td><%#= @result[:answered_in_20] %> ед.</td></tr>
-    <tr><td>Кол-во переведенных</td><td><%#= @result[:transfered] %> ед.</td></tr>
- -->
-    <tr><td>Кол-во исходящих</td><td><%= @result[:outbound] %> ед.</td></tr>
-    <tr><td>% эффективности работы</td><td><%= @result[:lcr] %> %</td></tr>
+    <tr><td><%= t(:min_wait) %></td><td><%= seconds_to_ms(@result[:min_queue_length]) %></td></tr>
+    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_ms(@result[:avg_queue_length]) %></td></tr>
+    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_ms(@result[:max_queue_length]) %></td></tr>
+    <tr><td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td><td><%= @result[:queue_0_3] %> ед.</td></tr>
+    <tr><td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td><td><%= @result[:queue_3_6] %> ед.</td></tr>
+    <tr><td><%= t(:wait) %> <%= t(:more_6_min) %></td><td><%= @result[:queue_6] %> ед.</td></tr>
+    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_ms(@result[:avg_total_length]) %></td></tr>
+    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls] %> ед.</td></tr>
+    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls] %> ед.</td></tr>
+    <tr><td><%= t(:amount_outbound_calss) %></td><td><%= @result[:outbound] %> ед.</td></tr>
+    <tr><td><%= t(:effectivity) %></td><td><%= @result[:lcr] %> %</td></tr>
   </tbody>
 </table>

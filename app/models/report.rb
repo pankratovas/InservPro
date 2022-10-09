@@ -5,21 +5,28 @@ class Report < ApplicationRecord
     filter
   end
 
-  # Входящие вызовы КЦ
+
+
+  # Вызовы в реальном времени
+  def realtime_report(user, filter = params[:filter])
+    @result = 'ccenter'
+  end
+
+  # Входящие вызовы
   def inbound_calls(user, filter = params[:filter])
     filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
     @search_params = filter.compact_blank!
     @result = VicidialCloserLog.inbound_calls_by_filter(@search_params)
   end
 
-  # Исходящие вызовы КЦ
+  # Исходящие вызовы
   def outbound_calls(user, filter = params[:filter])
     filter[:campaign] = user.permitted_campaigns.join('\',\'') if filter[:campaign].blank?
     @search_params = filter.compact_blank!
     @result = VicidialLog.outbound_calls_by_filter(@search_params)
   end
 
-  # Общая статистика вызовов КЦ
+  # Общая статистика
   def summary_calls(user, filter = params[:filter])
     if filter[:campaign].blank?
       filter[:campaign] = user.permitted_campaigns.join('\',\'')
@@ -51,8 +58,8 @@ class Report < ApplicationRecord
     }
   end
 
-  # Быстрая общая статистика вызовов КЦ
-  def summary_calls_preset(user, filter = params[:filter])
+  # Общая статистика за сутки
+  def summary_calls_24(user, filter = params[:filter])
     if filter[:campaign].blank?
       filter[:campaign] = user.permitted_campaigns.join('\',\'')
       filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
@@ -88,8 +95,8 @@ class Report < ApplicationRecord
     @result
   end
 
-  # Детальная по операторам КЦ
-  def agent_detailed(user, filter = params[:filter])
+  # Детальный по операторам
+  def operators_detailed(user, filter = params[:filter])
     filter[:campaign] = user.permitted_campaigns.join('\',\'') if filter[:campaign].blank?
     @search_params = filter.compact_blank!
     @agent_details = VicidialAgentLog.agent_details(@search_params)
@@ -174,8 +181,8 @@ class Report < ApplicationRecord
     @result = { apd1: apd1, apd1t: apd1t, apd2: apd2, apd2t: apd2t, codes: @pause_codes }
   end
 
-  # Статистика за день
-  def yesterday_report(user, filter = params[:filter])
+  # Вызовы за день
+  def calls_by_day(user, filter = params[:filter])
     filter[:start_date] = (filter[:start_date].to_time.beginning_of_day + 8.hours + 45.minutes).strftime(date_time_format)
     filter[:stop_date] = (filter[:start_date].to_time.beginning_of_day + 21.hours).strftime(date_time_format)
     filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
@@ -246,8 +253,8 @@ class Report < ApplicationRecord
     @result = data_hash
   end
 
-  # Статистика по оператору за период
-  def operator_statistics(user, filter = params[:filter])
+  # По оператору за период
+  def operator_by_period(user, filter = params[:filter])
     filter[:operator] = VicidialUser.first.user if filter[:operator].blank?
     @search_params = filter.compact_blank!
     @inbound_calls = VicidialCloserLog.operator_calls(@search_params).first
@@ -278,8 +285,8 @@ class Report < ApplicationRecord
     @result = data_hash
   end
 
-  # Сводная статистика по операторам
-  def all_operator_statistics(user, filter = params[:filter])
+  # По операторам за период
+  def operators_by_period(user, filter = params[:filter])
     data_hash = {}
     VicidialUser.all.order(:full_name).each do |operator|
       filter[:operator] = operator.user
@@ -312,7 +319,7 @@ class Report < ApplicationRecord
     @result = data_hash
   end
 
-  # Почасовой отчет по вызовам за день
+  # Вызовы по часам
   def calls_by_hour(user, filter = params[:filter])
     filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
     filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
@@ -348,8 +355,8 @@ class Report < ApplicationRecord
     @result = data_hash
   end
 
-  # Отчет по КЦ за сутки
-  def cc_daily(user, filter = params[:filter])
+  # Колл-центр за сутки
+  def call_center_24(user, filter = params[:filter])
     filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
     filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
     @date = filter[:start_date]
@@ -377,43 +384,38 @@ class Report < ApplicationRecord
     @result = data_hash
   end
 
-  # Навыки операторов !!!!!!!!!! только ФСС
-  def agent_skills(user, filter = params[:filter])
-    @ingroups = ['78122412000','callbk_oper','common','COVID2019','inbound','JE','KARELIYA','LENOBLAST','MEDIKI','SURDO','TSR','VNIM']
-    @agents = VicidialUser.pluck(:user)
+  # Навыки операторов
+  def operators_skills(user, filter = params[:filter])
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
+    filter[:operator] = VicidialUser.pluck(:user) if filter[:operator].blank?
+    @skills = VicidialInboundGroupAgent.get_skills(filter)
     data = {}
-    @agents.each do |agent|
-      data[agent] = {}
-      @ingroups.each do |ingroup|
-        @query1 = "SELECT group_rank AS 'rank',
-                         group_grade AS 'grade'
-                  FROM
-                         vicidial_inbound_group_agents
-                  WHERE
-                         user = '#{agent}' AND group_id = '#{ingroup}'"
-        @result1 = VicidialCloserLog.find_by_sql(@query1)
-        data[agent][ingroup] = {
-          rank: @result1.empty? ? '-' : @result1[0]["rank"],
-          grade: @result1.empty? ? '-' : @result1[0]["grade"]
-        }
+    VicidialUser.get_users_ingroups_array(filter).each do |line|
+      operator = line.first
+      ingroups_str = line.last
+      ingroups = ingroups_str.nil? || ingroups_str.empty? ? [] : ingroups_str[1..-3].split(' ')
+      data[operator] = {}
+      @skills.each do |row|
+        if operator == row[:user] && ingroups.include?(row[:group_id])
+          data[operator][row[:group_id]] = { rank: row[:rank], grade: row[:group_grade] }
+        end
       end
     end
-    @result = [@agents, @ingroups, data]
-    return @result
+    data
   end
 
   # Вызовы по регионам !!!!!!!!! только ФСС
   def calls_by_regions(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
+    @start_date = if filter.blank? || filter[:start_date].blank?
+      Time.now.beginning_of_day.strftime(date_time_format)
     else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime(date_time_format)
+      filter[:start_date]
+                  end
+    @stop_date = if filter.blank? || filter[:stop_date].blank?
+      Time.now.end_of_day.strftime(date_time_format)
     else
-      @stop_date = filter[:stop_date]
-    end
+      filter[:stop_date]
+                 end
     @order_query = " GROUP BY region_name ORDER BY campaign_id, region_name"
     @query = "SELECT t1.campaign_id,
                      COUNT(*) as count,
@@ -428,16 +430,16 @@ class Report < ApplicationRecord
 
   # Статусы по регионам !!!!!!!!!!! только ФСС
   def statuses_by_regions(user, filter = params[:filter])
-    if filter.blank? || filter[:start_date].blank?
-      @start_date = Time.now.beginning_of_day.strftime(date_time_format)
+    @start_date = if filter.blank? || filter[:start_date].blank?
+      Time.now.beginning_of_day.strftime(date_time_format)
     else
-      @start_date = filter[:start_date]
-    end
-    if filter.blank? || filter[:stop_date].blank?
-      @stop_date = Time.now.end_of_day.strftime(date_time_format)
+      filter[:start_date]
+                  end
+    @stop_date = if filter.blank? || filter[:stop_date].blank?
+      Time.now.end_of_day.strftime(date_time_format)
     else
-      @stop_date = filter[:stop_date]
-    end
+      filter[:stop_date]
+                 end
     @group_query = "  GROUP BY region_name, status"
     @query1 = "SELECT
                      COUNT(*) as count,
@@ -464,11 +466,6 @@ class Report < ApplicationRecord
       result_hash[r.region_name][:total] = total
     end
     [result_hash, @statuses]
-  end
-
-  # Статистика реального времени КЦ
-  def realtime_report(user, filter = params[:filter])
-    @result = 'ccenter'
   end
 
 
@@ -498,7 +495,7 @@ class Report < ApplicationRecord
   def calc_effectivity(part, total)
     total = total.to_f
     part = part.to_f
-    total.positive? ? (part / total / 3600).round(1) : 0
+    total.positive? ? (part / (total / 3600)).round(1) : 0
   end
 
 end

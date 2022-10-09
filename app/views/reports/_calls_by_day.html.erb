@@ -1,20 +1,18 @@
-<p>Общие данные по вызовам за день</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr><th>Параметр</th><th>Значение</th></tr>
   </thead>
   <tbody>
-    <tr><td>Дата</td><td><%= @result[:date1].to_time.strftime("%d.%m.%Y") %></td></tr>
-    <tr><td>Вх.</td><td><%= @result[:total_calls] %></td></tr>
-    <tr><td>Отв.</td><td><%= @result[:answered_calls] %></td></tr>
-    <tr><td>%</td><td><%= @result[:lcr] %> %</td></tr>
-    <tr><td>Среднее время обработки вызова</td><td><%= seconds_to_hms(@result[:avg_total_length]) %></td></tr>
-    <tr><td>Среднее время ожидания</td><td><%= seconds_to_hms(@result[:avg_queue_length]) %></td></tr>
-    <tr><td>Самое долгое время ожидания</td><td><%= seconds_to_hms(@result[:max_queue_length]) %></td></tr>
+    <tr><td><%= t(:datum) %></td><td><%= @result[:date1].to_time.strftime("%d.%m.%Y") %></td></tr>
+    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls] %></td></tr>
+    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls] %></td></tr>
+    <tr><td><%= t(:effectivity) %></td><td><%= @result[:lcr] %> %</td></tr>
+    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_hms(@result[:avg_total_length]) %></td></tr>
+    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_hms(@result[:avg_queue_length]) %></td></tr>
+    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_hms(@result[:max_queue_length]) %></td></tr>
   </tbody>
 </table>
 
-<p>Детальные данные по вызовам за день</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr class='info'>

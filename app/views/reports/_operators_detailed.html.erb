@@ -1,26 +1,32 @@
 <%
-operators = {}
-VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
+  operators = {}
+  VicidialUser.select(:user, :full_name).map { |u| operators[u.user] = u.full_name }
 %>
-<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
-  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
+<p>
+  <%= t(:operators) %>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
-      <th>ID</th>
-      <th>ФИО Оператора</th>
-      <th>Звонки</th>
-      <th>Время</th>
-      <th>Пауза</th>
-      <th>Сред. пауза</th>
-      <th>Ожидание</th>
-      <th>Сред. ожидание</th>
-      <th>Разговор</th>
-      <th>Сред. разговор</th>
-      <th>Обработка</th>
-      <th>Сред. обработка</th>
-      <th>Отбой</th>
-      <th>Сред. отбой</th>
+      <th><%= t(:id) %></th>
+      <th><%= t(:operator_name) %></th>
+      <th><%= t(:calls) %></th>
+      <th><%= t(:total_time) %></th>
+      <th><%= t(:pause) %></th>
+      <th><%= t(:avg_pause) %></th>
+      <th><%= t(:wait) %></th>
+      <th><%= t(:avg_wait) %></th>
+      <th><%= t(:talk) %></th>
+      <th><%= t(:avg_talk) %></th>
+      <th><%= t(:dispo) %></th>
+      <th><%= t(:avg_dispo) %></th>
+      <th><%= t(:dead) %></th>
+      <th><%= t(:avg_dead) %></th>
     </tr>
   </thead>
   <tbody>
@@ -43,7 +49,7 @@ VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
       </tr>
     <% end %>
     <tr>
-      <td colspan="2"><b>ИТОГО:</b></td>
+      <td colspan="2"><b><%= t(:total_amount) %></b></td>
       <td><b><%= @result[:apd1t][:total_calls] %></b></td>
       <td><b><%= seconds_to_hms(@result[:apd1t][:total_time]) %></b></td>
       <td><b><%= seconds_to_hms(@result[:apd1t][:total_pause]) %></b></td>
@@ -60,18 +66,24 @@ VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
   </tbody>
 </table>
 
-<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
-  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
+<p>
+  <%= t(:pause_codes) %>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
-      <th>ID</th>
-      <th>ФИО Оператора</th>
-      <th>Время в системе</th>
-      <th>Вне паузы</th>
-      <th>На паузе</th>
+      <th><%= t(:id) %></th>
+      <th><%= t(:operator_name) %></th>
+      <th><%= t(:logged_time) %></th>
+      <th><%= t(:off_pause) %></th>
+      <th><%= t(:on_pause) %></th>
       <% @result[:codes].each do |pc| %>
-        <th><%= pc.nil? ? 'Без кода' : pause_code(pc) %></th>
+        <th><%= pc.nil? ? t(:no_pause_code) : pause_code(pc) %></th>
       <% end %>
     </tr>
   </thead>
@@ -89,7 +101,7 @@ VicidialUser.select(:user, :full_name).map{|u| operators[u.user]=u.full_name }
       </tr>
     <% end %>
     <tr>
-      <td colspan="2"><b>ИТОГО:</b></td>
+      <td colspan="2"><b><%= t(:total_amount) %></b></td>
       <td><b><%= seconds_to_hms(@result[:apd2t][:total_time]) %></b></td>
       <td><b><%= seconds_to_hms(@result[:apd2t][:total_pause]) %></b></td>
       <td><b><%= seconds_to_hms(@result[:apd2t][:total_nonpause]) %></b></td>

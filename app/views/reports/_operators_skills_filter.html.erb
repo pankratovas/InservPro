@@ -1,0 +1,31 @@
+<div class="row">
+  <div class="col">
+    <div class="text-end">
+      <button type="button" class="btn btn-outline-info btn-label-left" data-bs-toggle="modal" data-bs-target="#SearchFilter">
+        Поиск по фильтру
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="SearchFilter" tabindex="-1" role="dialog" aria-labelledby="iSearchFilterTitle" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SearchFilterTitle">Фильтр</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <%= form_tag report_path(@report), method: :get, class: "form", role: "form" do %>
+            <div class="row">
+              <%= render 'reports/filter_parts/filter_ingroup' %>
+              <%= render 'reports/filter_parts/filter_operator' %>
+            </div>
+            <%= render 'reports/filter_parts/filter_submit_button' %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

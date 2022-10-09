@@ -1,4 +1,5 @@
 <div class="col">
-  <%= label_tag :lead, 'Лид:', class: "form-label" %>
-  <%= text_field_tag "[filter][lead]", params[:filter][:lead] ||= nil, class: "form-control", id: "lead_select" %>
+  <%= label_tag :lead, t(:lead), class: "form-label" %>
+  <%= text_field_tag "[filter][lead]", params[:filter][:lead] ||= nil,
+                     class: "form-control", id: "lead_select" %>
 </div>

@@ -1,87 +1,86 @@
-<p>Общие данные по вызовам за периоды</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
-      <th>Параметр</th>
-      <th>последние 15мин</th>
-      <th>последние 30мин</th>
-      <th>последний час</th>
-      <th>последние 24 часа</th>
+      <th><%= t(:parametr) %></th>
+      <th><%= t(:last_15_min) %></th>
+      <th><%= t(:last_30_min) %></th>
+      <th><%= t(:last_hour) %></th>
+      <th><%= t(:last_24_hour) %></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Минимальное время ожидания</td>
+      <td><%= t(:min_wait) %></td>
       <td><%= seconds_to_ms(@result[15][:min_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[30][:min_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[60][:min_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[1440][:min_queue_length]) %></td>
     </tr>
     <tr>
-      <td>Среднее время ожидания</td>
+      <td><%= t(:avg_wait) %></td>
       <td><%= seconds_to_ms(@result[15][:avg_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[30][:avg_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[60][:avg_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[1440][:avg_queue_length]) %></td>
     </tr>
     <tr>
-      <td>Максимальное время ожидания</td>
+      <td><%= t(:max_wait) %></td>
       <td><%= seconds_to_ms(@result[15][:max_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[30][:max_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[60][:max_queue_length]) %></td>
       <td><%= seconds_to_ms(@result[1440][:max_queue_length]) %></td>
     </tr>
     <tr>
-      <td>Время ожидания 0-3 минут</td>
+      <td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td>
       <td><%= @result[15][:queue_0_3] %> ед.</td>
       <td><%= @result[30][:queue_0_3] %> ед.</td>
       <td><%= @result[60][:queue_0_3] %> ед.</td>
       <td><%= @result[1440][:queue_0_3] %> ед.</td>
     </tr>
     <tr>
-      <td>Время ожидания 3-6 минут</td>
+      <td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td>
       <td><%= @result[15][:queue_3_6] %> ед.</td>
       <td><%= @result[30][:queue_3_6] %> ед.</td>
       <td><%= @result[60][:queue_3_6] %> ед.</td>
       <td><%= @result[1440][:queue_3_6] %> ед.</td>
     </tr>
     <tr>
-      <td>Время ожидания более 6 минут</td>
+      <td><%= t(:wait) %> <%= t(:more_6_min) %></td>
       <td><%= @result[15][:queue_6] %> ед.</td>
       <td><%= @result[30][:queue_6] %> ед.</td>
       <td><%= @result[60][:queue_6] %> ед.</td>
       <td><%= @result[1440][:queue_6] %> ед.</td>
     </tr>
     <tr>
-      <td>Среднее время обработки вызова</td>
+      <td><%= t(:talk) %></td>
       <td><%= seconds_to_ms(@result[15][:avg_total_length]) %></td>
       <td><%= seconds_to_ms(@result[30][:avg_total_length]) %></td>
       <td><%= seconds_to_ms(@result[60][:avg_total_length]) %></td>
       <td><%= seconds_to_ms(@result[1440][:avg_total_length]) %></td>
     </tr>
     <tr>
-      <td>Количество поступивших вызовов</td>
+      <td><%= t(:amount_inbound_calls) %></td>
       <td><%= @result[15][:total_calls] %> ед.</td>
       <td><%= @result[30][:total_calls] %> ед.</td>
       <td><%= @result[60][:total_calls] %> ед.</td>
       <td><%= @result[1440][:total_calls] %> ед.</td>
     </tr>
     <tr>
-      <td>Количество принятых вызовов</td>
+      <td><%= t(:answered_calls) %></td>
       <td><%= @result[15][:answered_calls] %> ед.</td>
       <td><%= @result[30][:answered_calls] %> ед.</td>
       <td><%= @result[60][:answered_calls] %> ед.</td>
       <td><%= @result[1440][:answered_calls] %> ед.</td>
     </tr>
     <tr>
-      <td>Кол-во исходящих</td>
+      <td><%= t(:amount_outbound_calss) %></td>
       <td><%= @result[15][:outbound] %> ед.</td>
       <td><%= @result[30][:outbound] %> ед.</td>
       <td><%= @result[60][:outbound] %> ед.</td>
       <td><%= @result[1440][:outbound] %> ед.</td>
     </tr>
     <tr>
-      <td>% эффективности работы</td>
+      <td><%= t(:effectivity) %></td>
       <td><%= @result[15][:lcr] %> %</td>
       <td><%= @result[30][:lcr] %> %</td>
       <td><%= @result[60][:lcr] %> %</td>

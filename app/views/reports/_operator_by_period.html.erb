@@ -1,84 +1,89 @@
 <p>Оператор <%= VicidialUser.find_by_user(@result[:user]).full_name %> (<%= @result[:user] %>)</p>
-<p>По фильтру за период с <%= localize_datetime_str(params[:filter][:start_date]) %> по
-  <%= localize_datetime_str(params[:filter][:stop_date]) %></p>
+<p>
+  <%= t(:by_filter) %>
+  <%= t(:from) %>
+  <%= localize_datetime_str(params[:filter][:start_date]) %>
+  <%= t(:to) %>
+  <%= localize_datetime_str(params[:filter][:stop_date]) %>
+</p>
 <table class="table table-bordered table-hover">
   <thead class="thead-light">
     <tr>
-      <th>Параметр</th>
-      <th>Значение</th>
+      <th><%= t(:parametr) %></th>
+      <th><%= t(:value) %></th>
     </tr>
   </thead>
   <tbody>
       <tr>
-        <td>Количество принятых вызовов</td>
+        <td><%= t(:answered_calls) %></td>
         <td><%= @result[:answered] %></td>
       </tr>
       <tr>
-        <td>Количество исходящих вызовов</td>
+        <td><%= t(:amount_outbound_calls) %></td>
         <td><%= @result[:outbound] %></td>
       </tr>
       <tr>
-        <td>Количество разговоров больше 5 мин</td>
+        <td><%= t(:talk) %> <%= t(:more_5_min) %></td>
         <td><%= @result[:talk_m5] %></td>
       </tr>
       <tr>
-        <td>Максимальное время в разговоре</td>
+        <td><%= t(:max_talk) %></td>
         <td><%= seconds_to_ms(@result[:max_talk]) %></td>
       </tr>
       <tr>
-        <td>Среднее время в разговоре (продолжительность разговора)</td>
+        <td><%= t(:avg_talk) %></td>
         <td><%= seconds_to_ms(@result[:avg_talk]) %></td>
       </tr>
       <tr>
-        <td>Первым прервал соединение, количество раз</td>
+        <td><%= t(:terminate_call) %></td>
         <td><%= @result[:term_by_oper] %></td>
       </tr>
       <tr>
-        <td>Количество совершенных переводов всего</td>
+        <td><%= t(:transfers_all) %></td>
         <td><%= @result[:transfer_total] %></td>
       </tr>
       <tr>
-        <td>Количество совершенных переводов внутри колл-центра</td>
+        <td><%= t(:transfers_call_center) %></td>
         <td><%= @result[:transfer_oper] %></td>
       </tr>
       <tr>
-        <td>Общее время в системе</td>
+        <td><%= t(:logged_time) %></td>
         <td><%= seconds_to_ms(@result[:total_time]) %></td>
       </tr>
       <tr>
-        <td>Время в разговоре</td>
+        <td><%= t(:talk_duration) %></td>
         <td><%= seconds_to_ms(@result[:talk_time]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе всего</td>
+        <td><%= t(:on_pause) %></td>
         <td><%= seconds_to_ms(@result[:pause_time]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе Обед</td>
+        <td><%= t(:on_pause) %> Обед</td>
         <td><%= seconds_to_ms(@result[:o_pause]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе Плановый перерыв</td>
+        <td><%= t(:on_pause) %> Плановый перерыв</td>
         <td><%= seconds_to_ms(@result[:pp_pause]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе Опрос граждан</td>
+        <td><%= t(:on_pause) %> Опрос граждан</td>
         <td><%= seconds_to_ms(@result[:og_pause]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе Внесение данных</td>
+        <td><%= t(:on_pause) %> Внесение данных</td>
         <td><%= seconds_to_ms(@result[:vd_pause]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе Обучение</td>
+        <td><%= t(:on_pause) %> Обучение</td>
         <td><%= seconds_to_ms(@result[:ed_pause]) %></td>
       </tr>
       <tr>
-        <td>Время на паузе в статусе Постобработка</td>
+        <td><%= t(:on_pause) %> в статусе Постобработка</td>
         <td><%= seconds_to_ms(@result[:dispo_time]) %></td>
       </tr>
       <tr>
-        <td>Эффективность работы</td>
+        <td><%= t(:effectivity) %></td>
         <td><%= @result[:effectivity] %></td>
       </tr>
   </tbody>
