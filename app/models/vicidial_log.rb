@@ -55,6 +55,14 @@ class VicidialLog < Vicidial
     find_by_sql(@query)
   end
 
+  def self.summary_metrics(search_args)
+    statuses = %w[DROP XDROP HXFER QVMAIL HOLDTO LIVE QUEUE TIMEOT AFTHRS NANQUE INBND]
+    where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:campaign])
+      .where.not(status: statuses)
+      .select('COUNT (*) AS outbound_calls_count')
+  end
+
+
   def self.statuses_by_user(search_args)
     @query = "SELECT
                 user,

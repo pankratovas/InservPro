@@ -137,4 +137,24 @@ class VicidialCloserLog < Vicidial
     find_by_sql(@query)
   end
 
+
+  def self.summary_metrics(search_args)
+    statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
+    where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:ingroup])
+      .select('COUNT(*) AS total_calls_count',
+              'SUM(length_in_sec) AS total_length_sec',
+              "SUM(IF(status NOT IN (#{statuses}),1,0)) AS answered_calls_count",
+              "SUM(IF(status NOT IN (#{statuses}) AND queue_seconds < 20.0,1,0)) AS answered_20_calls_count",
+              'SUM(IF(queue_seconds > 0, 1,0)) AS queued_calls_count',
+              'MAX(queue_seconds) AS max_queue_sec',
+              'AVG(queue_seconds) AS avg_queue_sec',
+              'MIN(queue_seconds) AS min_queue_sec',
+              'AVG(length_in_sec - queue_seconds) AS avg_talk_sec',
+              'SUM(length_in_sec - queue_seconds) AS total_talk_sec',
+              'SUM(IF(queue_seconds BETWEEN 0 AND 180, 1,0)) AS queued_0_180_count',
+              'SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS queued_180_360_count',
+              'SUM(IF(queue_seconds > 360, 1,0)) AS queued_360_count',
+              'SUM(IF(queue_seconds > 0, queue_seconds,0)) AS total_queue_sec')
+  end
+
 end

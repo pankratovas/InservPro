@@ -14,6 +14,13 @@ class VicidialUserCallLog < Vicidial
     find_by_sql(@query)
   end
 
+  def self.summary_metrics(search_args)
+    where(call_date: search_args[:start_date]..search_args[:stop_date],
+          call_type: 'XFER_3WAY')
+      .select('COUNT(*) AS transfered_calls_count')
+  end
+
+
   def self.operator_transfers(search_args)
     @query = "SELECT
                 SUM(IF(call_type = 'XFER_3WAY',1,0)) AS 'Transfer_total',

@@ -2,7 +2,8 @@ class Report < ApplicationRecord
 
   # TEST
   def test_report(user, filter = params[:filter])
-    filter
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
+    @inbound_calls = VicidialCloserLog.get_metrics(filter).first
   end
 
 
@@ -403,6 +404,8 @@ class Report < ApplicationRecord
     end
     data
   end
+
+
 
   # Вызовы по регионам !!!!!!!!! только ФСС
   def calls_by_regions(user, filter = params[:filter])
