@@ -1,4 +1,4 @@
-<p>Оператор <%= VicidialUser.find_by_user(@result[:user]).full_name %> (<%= @result[:user] %>)</p>
+<p>Оператор <%= VicidialUser.find_by_user(@result[:operator]).full_name %> (<%= @result[:operator] %>)</p>
 <p>
   <%= t(:by_filter) %>
   <%= t(:from) %>
@@ -16,23 +16,23 @@
   <tbody>
       <tr>
         <td><%= t(:answered_calls) %></td>
-        <td><%= @result[:answered] %></td>
+        <td><%= @result[:answered_calls_count] %></td>
       </tr>
       <tr>
         <td><%= t(:amount_outbound_calls) %></td>
-        <td><%= @result[:outbound] %></td>
+        <td><%= @result[:outbound_calls_count] %></td>
       </tr>
       <tr>
         <td><%= t(:talk) %> <%= t(:more_5_min) %></td>
-        <td><%= @result[:talk_m5] %></td>
+        <td><%= @result[:talked_300_count] %></td>
       </tr>
       <tr>
         <td><%= t(:max_talk) %></td>
-        <td><%= seconds_to_ms(@result[:max_talk]) %></td>
+        <td><%= seconds_to_ms(@result[:max_talk_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:avg_talk) %></td>
-        <td><%= seconds_to_ms(@result[:avg_talk]) %></td>
+        <td><%= seconds_to_ms(@result[:avg_talk_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:terminate_call) %></td>
@@ -40,23 +40,23 @@
       </tr>
       <tr>
         <td><%= t(:transfers_all) %></td>
-        <td><%= @result[:transfer_total] %></td>
+        <td><%= @result[:total_transfered_calls] %></td>
       </tr>
       <tr>
         <td><%= t(:transfers_call_center) %></td>
-        <td><%= @result[:transfer_oper] %></td>
+        <td><%= @result[:operator_transfered_calls] %></td>
       </tr>
       <tr>
         <td><%= t(:logged_time) %></td>
-        <td><%= seconds_to_ms(@result[:total_time]) %></td>
+        <td><%= seconds_to_ms(@result[:total_time_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:talk_duration) %></td>
-        <td><%= seconds_to_ms(@result[:talk_time]) %></td>
+        <td><%= seconds_to_ms(@result[:total_talk_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:on_pause) %></td>
-        <td><%= seconds_to_ms(@result[:pause_time]) %></td>
+        <td><%= seconds_to_ms(@result[:total_pause_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:on_pause) %> Обед</td>
@@ -80,7 +80,7 @@
       </tr>
       <tr>
         <td><%= t(:on_pause) %> в статусе Постобработка</td>
-        <td><%= seconds_to_ms(@result[:dispo_time]) %></td>
+        <td><%= seconds_to_ms(@result[:total_dispo_sec]) %></td>
       </tr>
       <tr>
         <td><%= t(:effectivity) %></td>

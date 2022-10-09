@@ -3,13 +3,13 @@
     <tr><th>Параметр</th><th>Значение</th></tr>
   </thead>
   <tbody>
-    <tr><td><%= t(:datum) %></td><td><%= @result[:date1].to_time.strftime("%d.%m.%Y") %></td></tr>
-    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls] %></td></tr>
-    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls] %></td></tr>
+    <tr><td><%= t(:datum) %></td><td><%= @result[:date1].to_time.strftime('%d.%m.%Y') %></td></tr>
+    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls_count] %></td></tr>
+    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls_count] %></td></tr>
     <tr><td><%= t(:effectivity) %></td><td><%= @result[:lcr] %> %</td></tr>
-    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_hms(@result[:avg_total_length]) %></td></tr>
-    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_hms(@result[:avg_queue_length]) %></td></tr>
-    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_hms(@result[:max_queue_length]) %></td></tr>
+    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_hms(@result[:avg_total_sec]) %></td></tr>
+    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_hms(@result[:avg_queue_sec]) %></td></tr>
+    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_hms(@result[:max_queue_sec]) %></td></tr>
   </tbody>
 </table>
 
@@ -20,7 +20,7 @@
       <th colspan="2" class="text-center"><%= I18n.t('date.day_names')[(@result[:date1].to_time).wday] %></th>
     </tr>
     <tr class='info'>
-      <th colspan="2" class="text-center"><%= @result[:date1].to_time.strftime("%d.%m.%Y") %></th>
+      <th colspan="2" class="text-center"><%= @result[:date1].to_time.strftime('%d.%m.%Y') %></th>
     </tr>
     <tr class='info'>
       <th class="text-center">вх.</th>
@@ -31,8 +31,8 @@
     <% @result[:hashdata].each do |key, value| %>
       <tr>
         <td class="text-center"><%= key.split("-").map! {|i| i[0..-4]}.join(" - ") %></td>
-        <td class="text-center"><%= value[:total_calls] %></td>
-        <td class="text-center"><%= value[:answered_calls] %></td>
+        <td class="text-center"><%= value[:total_calls_count] %></td>
+        <td class="text-center"><%= value[:answered_calls_count] %></td>
       </tr>
     <% end %>
   </tbody>

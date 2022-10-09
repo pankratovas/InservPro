@@ -10,16 +10,16 @@
     <tr><th><%= t(:parametr) %></th><th><%= t(:value) %></th></tr>
   </thead>
   <tbody>
-    <tr><td><%= t(:min_wait) %></td><td><%= seconds_to_ms(@result[:min_queue_length]) %></td></tr>
-    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_ms(@result[:avg_queue_length]) %></td></tr>
-    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_ms(@result[:max_queue_length]) %></td></tr>
-    <tr><td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td><td><%= @result[:queue_0_3] %> ед.</td></tr>
-    <tr><td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td><td><%= @result[:queue_3_6] %> ед.</td></tr>
-    <tr><td><%= t(:wait) %> <%= t(:more_6_min) %></td><td><%= @result[:queue_6] %> ед.</td></tr>
-    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_ms(@result[:avg_total_length]) %></td></tr>
-    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls] %> ед.</td></tr>
-    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls] %> ед.</td></tr>
-    <tr><td><%= t(:amount_outbound_calss) %></td><td><%= @result[:outbound] %> ед.</td></tr>
+    <tr><td><%= t(:min_wait) %></td><td><%= seconds_to_ms(@result[:min_queue_sec]) %></td></tr>
+    <tr><td><%= t(:avg_wait) %></td><td><%= seconds_to_ms(@result[:avg_queue_sec]) %></td></tr>
+    <tr><td><%= t(:max_wait) %></td><td><%= seconds_to_ms(@result[:max_queue_sec]) %></td></tr>
+    <tr><td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td><td><%= @result[:queued_0_180_count] %> ед.</td></tr>
+    <tr><td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td><td><%= @result[:queued_0_360_count] %> ед.</td></tr>
+    <tr><td><%= t(:wait) %> <%= t(:more_6_min) %></td><td><%= @result[:queued_360_count] %> ед.</td></tr>
+    <tr><td><%= t(:avg_talk) %></td><td><%= seconds_to_ms(@result[:avg_total_sec]) %></td></tr>
+    <tr><td><%= t(:amount_inbound_calls) %></td><td><%= @result[:total_calls_count] %> ед.</td></tr>
+    <tr><td><%= t(:answered_calls) %></td><td><%= @result[:answered_calls_count] %> ед.</td></tr>
+    <tr><td><%= t(:amount_outbound_calls) %></td><td><%= @result[:outbound_calls_count] %> ед.</td></tr>
     <tr><td><%= t(:effectivity) %></td><td><%= @result[:lcr] %> %</td></tr>
   </tbody>
 </table>

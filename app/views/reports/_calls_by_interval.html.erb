@@ -12,55 +12,55 @@
     <tr>
       <td><%= t(:min_wait) %></td>
       <% @intervals.each do |i| %>
-        <td><%= seconds_to_ms(@result[i][:min_queue]) %></td>
+        <td><%= seconds_to_ms(@result[i][:min_queue_sec]) %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:avg_wait) %></td>
       <% @intervals.each do |i| %>
-        <td><%= seconds_to_ms(@result[i][:avg_queue]) %></td>
+        <td><%= seconds_to_ms(@result[i][:avg_queue_sec]) %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:max_wait) %></td>
       <% @intervals.each do |i| %>
-        <td><%= seconds_to_ms(@result[i][:max_queue]) %></td>
+        <td><%= seconds_to_ms(@result[i][:max_queue_sec]) %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td>
       <% @intervals.each do |i| %>
-        <td><%= @result[i][:queue_0_3] %></td>
+        <td><%= @result[i][:queued_0_180_count] %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td>
       <% @intervals.each do |i| %>
-        <td><%= @result[i][:queue_3_6] %></td>
+        <td><%= @result[i][:queued_180_360_count] %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:wait) %> <%= t(:more_6_min) %></td>
       <% @intervals.each do |i| %>
-        <td><%= @result[i][:queue_m6] %></td>
+        <td><%= @result[i][:queued_360_count] %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:avg_talk) %></td>
       <% @intervals.each do |i| %>
-        <td><%= seconds_to_ms(@result[i][:avg_talk]) %></td>
+        <td><%= seconds_to_ms(@result[i][:avg_talk_sec]) %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:amount_inbound_calls) %></td>
       <% @intervals.each do |i| %>
-        <td><%= @result[i][:total_calls] %></td>
+        <td><%= @result[i][:total_calls_count] %></td>
       <% end %>
     </tr>
     <tr>
       <td><%= t(:answered_calls) %></td>
       <% @intervals.each do |i| %>
-        <td><%= @result[i][:answered] %></td>
+        <td><%= @result[i][:answered_calls_count] %></td>
       <% end %>
     </tr>
     <tr>

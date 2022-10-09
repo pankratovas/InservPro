@@ -37,23 +37,23 @@
     <% @result.keys.each do |operator| %>
       <tr>
           <td><%= operators[operator] %> (<%= operator %>)</td>
-          <td><%= @result[operator][:answered] %></td>
-          <td><%= @result[operator][:outbound] %></td>
-          <td><%= @result[operator][:talk_m5] %></td>
-          <td><%= seconds_to_ms(@result[operator][:max_talk]) %></td>
-          <td><%= seconds_to_ms(@result[operator][:avg_talk]) %></td>
+          <td><%= @result[operator][:answered_calls_count] %></td>
+          <td><%= @result[operator][:outbound_calls_count] %></td>
+          <td><%= @result[operator][:talked_300_count] %></td>
+          <td><%= seconds_to_ms(@result[operator][:max_talk_sec]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:avg_talk_sec]) %></td>
           <td><%= @result[operator][:term_by_oper] %></td>
-          <td><%= @result[operator][:transfer_total] %></td>
-          <td><%= @result[operator][:transfer_oper] %></td>
-          <td><%= seconds_to_ms(@result[operator][:total_time]) %></td>
-          <td><%= seconds_to_ms(@result[operator][:talk_time]) %></td>
-          <td><%= seconds_to_ms(@result[operator][:pause_time]) %></td>
+          <td><%= @result[operator][:total_transfered_calls] %></td>
+          <td><%= @result[operator][:operator_transfered_calls] %></td>
+          <td><%= seconds_to_ms(@result[operator][:total_time_sec]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:total_talk_sec]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:total_pause_sec]) %></td>
           <td><%= seconds_to_ms(@result[operator][:o_pause]) %></td>
           <td><%= seconds_to_ms(@result[operator][:pp_pause]) %></td>
           <td><%= seconds_to_ms(@result[operator][:og_pause]) %></td>
           <td><%= seconds_to_ms(@result[operator][:vd_pause]) %></td>
           <td><%= seconds_to_ms(@result[operator][:ed_pause]) %></td>
-          <td><%= seconds_to_ms(@result[operator][:dispo_time]) %></td>
+          <td><%= seconds_to_ms(@result[operator][:total_dispo_sec]) %></td>
           <td><%= @result[operator][:effectivity] %></td>
       </tr>
     <% end %>

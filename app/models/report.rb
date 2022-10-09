@@ -30,67 +30,63 @@ class Report < ApplicationRecord
   # Общая статистика
   def summary_calls(user, filter = params[:filter])
     if filter[:campaign].blank?
-      filter[:campaign] = user.permitted_campaigns.join('\',\'')
-      filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+      filter[:campaign] = user.permitted_campaigns
+      filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     elsif !filter[:campaign].blank? && filter[:ingroup].blank?
-      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) &
-                          user.permitted_ingroups).join('\',\'')
+      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) & user.permitted_ingroups)
     end
-    @search_params = filter.compact_blank!
-    @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
-    @transfer_calls = VicidialUserCallLog.summary_metric_by_filter(@search_params).first
-    @outbound_calls = VicidialLog.summary_metric_by_filter(@search_params).first
+    @inbound_metrics = VicidialCloserLog.summary_metrics(filter).first
+    @transfer_metrics = VicidialUserCallLog.summary_metrics(filter).first
+    @outbound_metrics = VicidialLog.summary_metrics(filter).first
     @result = {
       date1: filter[:start_date],
       date2: filter[:stop_date],
-      total_calls: @inbound_calls['TotalCalls'],
-      answered_calls: @inbound_calls['Answered'],
-      lcr: calc_percent(@inbound_calls['Answered'], @inbound_calls['TotalCalls']),
-      answered_in_20: @inbound_calls['Answered20'],
-      transfered: @transfer_calls['Transfered'],
-      outbound: @outbound_calls['OutboundCalls'],
-      avg_total_length: calc_avg(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
-      avg_queue_length: calc_avg(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
-      max_queue_length: @inbound_calls['Max_queue'].to_i,
-      min_queue_length: @inbound_calls['Min_queue'].to_i,
-      queue_0_3: @inbound_calls['Queued_03'].to_i,
-      queue_3_6: @inbound_calls['Queued_36'].to_i,
-      queue_6: @inbound_calls['Queued_6'].to_i
+      total_calls_count: @inbound_metrics[:total_calls_count],
+      answered_calls_count: @inbound_metrics[:answered_calls_count],
+      lcr: calc_percent(@inbound_metrics[:answered_calls_count], @inbound_metrics[:total_calls_count]),
+      answered_20_calls_count: @inbound_metrics[:answered_20_calls_count],
+      transfered_calls_count: @transfer_metrics[:transfered_calls_count],
+      outbound_calls_count: @outbound_metrics[:outbound_calls_count],
+      avg_total_sec: calc_avg(@inbound_metrics[:total_length_sec], @inbound_metrics[:total_calls_count]),
+      avg_queue_sec: @inbound_metrics[:avg_queue_sec].to_i,
+      max_queue_sec: @inbound_metrics[:max_queue_sec].to_i,
+      min_queue_sec: @inbound_metrics[:min_queue_sec].to_i,
+      queued_0_180_count: @inbound_metrics[:queued_0_180_count].to_i,
+      queued_180_360_count: @inbound_metrics[:queued_180_360_count].to_i,
+      queued_360_count: @inbound_metrics[:queued_360_count].to_i
     }
   end
 
   # Общая статистика за сутки
   def summary_calls_24(user, filter = params[:filter])
     if filter[:campaign].blank?
-      filter[:campaign] = user.permitted_campaigns.join('\',\'')
-      filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+      filter[:campaign] = user.permitted_campaigns
+      filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     elsif !filter[:campaign].blank? && filter[:ingroup].blank?
-      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) &
-        user.permitted_ingroups).join('\',\'')
+      filter[:ingroup] = (VicidialCampaign.find(filter[:campaign]).ingroups.map(&:group_id) & user.permitted_ingroups)
     end
-    @search_params = filter.compact_blank!
     @result = {}
     [15, 30, 60, 1440].each do |min|
       @current_time = Time.now
       filter[:start_date] = (@current_time - min.minutes).strftime(date_time_format)
       filter[:stop_date] = @current_time.strftime(date_time_format)
-      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
-      @transfer_calls = VicidialUserCallLog.summary_metric_by_filter(@search_params).first
-      @outbound_calls = VicidialLog.summary_metric_by_filter(@search_params).first
+      @inbound_metrics = VicidialCloserLog.summary_metrics(filter).first
+      @transfer_metrics = VicidialUserCallLog.summary_metrics(filter).first
+      @outbound_metrics = VicidialLog.summary_metrics(filter).first
       @result[min] = {
-        total_calls: @inbound_calls['TotalCalls'],
-        answered_calls: @inbound_calls['Answered'],
-        lcr: calc_percent(@inbound_calls['Answered'], @inbound_calls['TotalCalls']),
-        answered_in_20: @inbound_calls['Answered20'],
-        transfered: @transfer_calls['Transfered'],
-        outbound: @outbound_calls['OutboundCalls'],
-        avg_total_length: calc_avg(@inbound_calls['TotalLength'], @inbound_calls['TotalCalls']),
-        avg_queue_length: calc_avg(@inbound_calls['QueueTime'], @inbound_calls['Queued']),
-        max_queue_length: @inbound_calls['Max_queue'].to_i,
-        min_queue_length: @inbound_calls['Min_queue'].to_i,
-        queue_0_3: @inbound_calls['Queued_03'].to_i,
-        queue_3_6: @inbound_calls['Queued_36'].to_i,
-        queue_6: @inbound_calls['Queued_6'].to_i
+        total_calls_count: @inbound_metrics[:total_calls_count],
+        answered_calls_count: @inbound_metrics[:answered_calls_count],
+        lcr: calc_percent(@inbound_metrics[:answered_calls_count], @inbound_metrics[:total_calls_count]),
+        answered_20_calls_count: @inbound_metrics[:answered_20_calls_count],
+        transfered_calls_count: @transfer_metrics[:transfered_calls_count],
+        outbound_calls_count: @outbound_metrics[:outbound_calls_count],
+        avg_total_sec: calc_avg(@inbound_metrics[:total_length_sec], @inbound_metrics[:total_calls_count]),
+        avg_queue_sec: @inbound_metrics[:avg_queue_sec].to_i,
+        max_queue_sec: @inbound_metrics[:max_queue_sec].to_i,
+        min_queue_sec: @inbound_metrics[:min_queue_sec].to_i,
+        queued_0_180_count: @inbound_metrics[:queued_0_180_count].to_i,
+        queued_180_360_count: @inbound_metrics[:queued_180_360_count].to_i,
+        queued_360_count: @inbound_metrics[:queued_360_count].to_i
       }
     end
     @result
@@ -98,86 +94,86 @@ class Report < ApplicationRecord
 
   # Детальный по операторам
   def operators_detailed(user, filter = params[:filter])
-    filter[:campaign] = user.permitted_campaigns.join('\',\'') if filter[:campaign].blank?
-    @search_params = filter.compact_blank!
-    @agent_details = VicidialAgentLog.agent_details(@search_params)
-    @pause_codes = VicidialAgentLog.get_pause_codes(@search_params).map(&:PauseCode)
-    @agent_pauses = VicidialAgentLog.agent_pauses(@search_params)
+    filter[:campaign] = user.permitted_campaigns if filter[:campaign].blank?
+    @agent_details = VicidialAgentLog.agent_details(filter)
+    @pause_codes = VicidialAgentLog.pause_codes_array(filter)
+    @agent_pauses = VicidialAgentLog.agent_pauses(filter)
+    @agent_non_pauses = VicidialAgentLog.agent_non_pauses(filter)
     apd1 = {}
     @agent_details.each do |row|
-      apd1[row['SIP']] = {
-        user_calls: row['TotalCalls'].to_i,
-        user_time: row['PauseDur'].to_i +
-                   row['WaitDur'].to_i +
-                   row['TalkDur'].to_i +
-                   row['DispoDur'].to_i +
-                   row['DeadDur'].to_i,
-        user_pause: row['PauseDur'].to_i,
-        user_avg_pause: (row['PauseDur'] / row['TotalCalls'].to_f).round(0),
-        user_wait: row['WaitDur'].to_i,
-        user_avg_wait: (row['WaitDur'] / row['TotalCalls'].to_f).round(0),
-        user_talk: row['TalkDur'].to_i,
-        user_avg_talk: (row['TalkDur'] / row['TotalCalls'].to_f).round(0),
-        user_dispo: row['DispoDur'].to_i,
-        user_avg_dispo: (row['DispoDur'] / row['TotalCalls'].to_f).round(0),
-        user_dead: row['DeadDur'].to_i,
-        user_avg_dead: (row['DeadDur'] / row['TotalCalls'].to_f).round(0)
+      apd1[row[:user]] = {
+        user_calls: row[:total_calls_count].to_i,
+        user_time: row[:total_pause_sec].to_i +
+                   row[:total_wait_sec].to_i +
+                   row[:total_talk_sec].to_i +
+                   row[:total_dispo_sec].to_i +
+                   row[:total_dead_sec].to_i,
+        user_pause: row[:total_pause_sec].to_i,
+        user_avg_pause: (row[:total_pause_sec] / row[:total_calls_count].to_f).round(0),
+        user_wait: row[:total_wait_sec].to_i,
+        user_avg_wait: (row[:total_wait_sec] / row[:total_calls_count].to_f).round(0),
+        user_talk: row[:total_talk_sec].to_i,
+        user_avg_talk: (row[:total_talk_sec] / row[:total_calls_count].to_f).round(0),
+        user_dispo: row[:total_dispo_sec].to_i,
+        user_avg_dispo: (row[:total_dispo_sec] / row[:total_calls_count].to_f).round(0),
+        user_dead: row[:total_dead_sec].to_i,
+        user_avg_dead: (row[:total_dead_sec] / row[:total_calls_count].to_f).round(0)
       }
     end
     apd1t = {
-      total_calls: apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x },
-      total_time: apd1.keys.each.map { |user| apd1[user][:user_time] }.compact.inject { |sum, x| sum + x },
-      total_pause: apd1.keys.each.map { |user| apd1[user][:user_pause] }.compact.inject { |sum, x| sum + x },
+      total_calls: apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x },
+      total_time: apd1.keys.each.map { |usr| apd1[usr][:user_time] }.compact.inject { |sum, x| sum + x },
+      total_pause: apd1.keys.each.map { |usr| apd1[usr][:user_pause] }.compact.inject { |sum, x| sum + x },
       total_avg_pause:
-        begin (apd1.keys.each.map { |user| apd1[user][:user_pause] }.compact.inject { |sum, x| sum + x } /
-               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        begin (apd1.keys.each.map { |usr| apd1[usr][:user_pause] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
         rescue 0
         end,
-      total_wait: apd1.keys.each.map { |user| apd1[user][:user_wait] }.compact.inject { |sum, x| sum + x },
+      total_wait: apd1.keys.each.map { |usr| apd1[usr][:user_wait] }.compact.inject { |sum, x| sum + x },
       total_avg_wait:
-        begin (apd1.keys.each.map { |user| apd1[user][:user_wait] }.compact.inject { |sum, x| sum + x} /
-               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x}.to_f).round(0)
+        begin (apd1.keys.each.map { |usr| apd1[usr][:user_wait] }.compact.inject { |sum, x| sum + x} /
+               apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x}.to_f).round(0)
         rescue 0
         end,
-      total_talk: apd1.keys.each.map { |user| apd1[user][:user_talk] }.compact.inject { |sum, x| sum + x },
+      total_talk: apd1.keys.each.map { |usr| apd1[usr][:user_talk] }.compact.inject { |sum, x| sum + x },
       total_avg_talk:
-        begin (apd1.keys.each.map { |user| apd1[user][:user_talk] }.compact.inject { |sum, x| sum + x } /
-               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x}.to_f).round(0)
+        begin (apd1.keys.each.map { |usr| apd1[usr][:user_talk] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
         rescue 0
         end,
-      total_dispo: apd1.keys.each.map { |user| apd1[user][:user_dispo] }.compact.inject { |sum, x| sum + x },
+      total_dispo: apd1.keys.each.map { |usr| apd1[usr][:user_dispo] }.compact.inject { |sum, x| sum + x },
       total_avg_dispo:
-        begin (apd1.keys.each.map { |user| apd1[user][:user_dispo] }.compact.inject { |sum, x| sum + x } /
-               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        begin (apd1.keys.each.map { |usr| apd1[usr][:user_dispo] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
         rescue 0
         end,
-      total_dead: apd1.keys.each.map { |user| apd1[user][:user_dead] }.compact.inject { |sum, x| sum + x },
+      total_dead: apd1.keys.each.map { |usr| apd1[usr][:user_dead] }.compact.inject { |sum, x| sum + x },
       total_avg_dead:
-        begin (apd1.keys.each.map { |user| apd1[user][:user_dead] }.compact.inject{ |sum,x| sum + x } /
-               apd1.keys.each.map { |user| apd1[user][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
+        begin (apd1.keys.each.map { |usr| apd1[usr][:user_dead] }.compact.inject { |sum, x| sum + x } /
+               apd1.keys.each.map { |usr| apd1[usr][:user_calls] }.compact.inject { |sum, x| sum + x }.to_f).round(0)
         rescue 0
         end
     }
     apd2 = {}
-    @agent_details.each do |row|
-      apd2[row['SIP']] = {
-        user_time: row['Pause'].to_i + row['NonPause'].to_i,
-        user_pause: row['Pause'].to_i,
-        user_nonpause: row['NonPause'].to_i
+    @agent_non_pauses.each do |row|
+      apd2[row[:user]] = {
+        user_time: row[:total_pause_sec].to_i + row[:total_non_pause_sec].to_i,
+        user_pause: row[:total_pause_sec].to_i,
+        user_nonpause: row[:total_non_pause_sec].to_i
       }
       @pause_codes.each do |pc|
         @agent_pauses.each do |str|
-          apd2[row['SIP']][pc] = str['Pause'] if (str['SIP'] == row['SIP']) & (str['PauseCode'] == pc)
+          apd2[row[:user]][pc] = str[:total_pause_sec] if (str[:user] == row[:user]) & (str[:pause_code] == pc)
         end
       end
     end
     apd2t = {
-      total_time: apd2.keys.each.map { |user| apd2[user][:user_time] }.compact.inject { |sum, x| sum + x },
-      total_pause: apd2.keys.each.map { |user| apd2[user][:user_pause] }.compact.inject { |sum, x| sum + x },
-      total_nonpause: apd2.keys.each.map { |user| apd2[user][:user_nonpause] }.compact.inject { |sum, x| sum + x }
+      total_time: apd2.keys.each.map { |usr| apd2[usr][:user_time] }.compact.inject { |sum, x| sum + x },
+      total_pause: apd2.keys.each.map { |usr| apd2[usr][:user_pause] }.compact.inject { |sum, x| sum + x },
+      total_nonpause: apd2.keys.each.map { |usr| apd2[usr][:user_nonpause] }.compact.inject { |sum, x| sum + x }
     }
     @pause_codes.each do |pc|
-      apd2t[pc] = apd2.keys.each.map { |user| apd2[user][pc] }.compact.inject { |sum, x| sum + x }
+      apd2t[pc] = apd2.keys.each.map { |usr| apd2[usr][pc] }.compact.inject { |sum, x| sum + x }
     end
     @result = { apd1: apd1, apd1t: apd1t, apd2: apd2, apd2t: apd2t, codes: @pause_codes }
   end
@@ -186,10 +182,9 @@ class Report < ApplicationRecord
   def calls_by_day(user, filter = params[:filter])
     filter[:start_date] = (filter[:start_date].to_time.beginning_of_day + 8.hours + 45.minutes).strftime(date_time_format)
     filter[:stop_date] = (filter[:start_date].to_time.beginning_of_day + 21.hours).strftime(date_time_format)
-    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
-    @search_params = filter.compact_blank!
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     @start_date = filter[:start_date]
-    @day_calls = VicidialCloserLog.day_calls(@search_params).first
+    @day_calls = VicidialCloserLog.day_calls(filter).first
     hash = {}
     time_intervals = %w[08:45:00-09:59:59 10:00:00-10:59:59 11:00:00-11:59:59 12:00:00-12:59:59
                         13:00:00-13:59:59 14:00:00-14:59:59 15:00:00-15:59:59 16:00:00-16:59:59
@@ -198,37 +193,36 @@ class Report < ApplicationRecord
       t = i.split('-')
       filter[:start_date] = "#{@start_date.split(' ')[0]} #{t[0]}"
       filter[:stop_date] = "#{@start_date.split(' ')[0]} #{t[1]}"
-      @search_params_intervals = filter
-      @interval_calls = VicidialCloserLog.interval_calls(@search_params_intervals).first
-      hash[i] = { total_calls: @interval_calls['TotalCalls'], answered_calls: @interval_calls['Answered'] }
+      @interval_calls = VicidialCloserLog.interval_calls(filter).first
+      hash[i] = { total_calls_count: @interval_calls[:total_calls_count],
+                  answered_calls_count: @interval_calls[:answered_calls_count] }
     end
     @result = {
       date1: @start_date.split(' ').first,
       date2: @start_date.split(' ').first,
-      total_calls: @day_calls['TotalCalls'],
-      answered_calls: @day_calls['Answered'],
-      lcr: calc_percent(@day_calls['Answered'], @day_calls['TotalCalls']),
-      answered_in_20: @day_calls['Answered20'],
-      avg_total_length: calc_avg(@day_calls['TotalLength'], @day_calls['TotalCalls']),
-      avg_queue_length: calc_avg(@day_calls['QueueTime'], @day_calls['Queued']),
-      max_queue_length: @day_calls['Max_queue'].to_i,
-      min_queue_length: @day_calls['Min_queue'].to_i,
+      total_calls_count: @day_calls[:total_calls_count],
+      answered_calls_count: @day_calls[:answered_calls_count],
+      lcr: calc_percent(@day_calls[:answered_calls_count], @day_calls[:total_calls_count]),
+      answered_20_calls_count: @day_calls[:answered_20_calls_count],
+      avg_total_sec: calc_avg(@day_calls[:total_length_sec], @day_calls[:total_calls_count]),
+      avg_queue_sec: calc_avg(@day_calls[:total_queue_sec], @day_calls[:queued_calls_count]),
+      max_queue_sec: @day_calls[:max_queue_sec].to_i,
+      min_queue_sec: @day_calls[:min_queue_sec].to_i,
       hashdata: hash
     }
   end
 
   # Статусы по операторам
   def statuses_by_user(user, filter = params[:filter])
-    @search_params = filter.compact_blank!
-    @inbound_statuses = VicidialCloserLog.statuses_by_user(@search_params)
-    @outbound_statuses = VicidialLog.statuses_by_user(@search_params)
+    @inbound_statuses = VicidialCloserLog.statuses_by_user(filter)
+    @outbound_statuses = VicidialLog.statuses_by_user(filter)
     [@inbound_statuses, @outbound_statuses]
   end
 
   # Вызовы с разбивкой по интервалам
   def calls_by_interval(user, filter = params[:filter])
     @date = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
-    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     data_hash = {}
     time_intervals = %w[00:00:00-08:59:59 09:00:00-11:59:59 12:00:00-14:59:59
                         15:00:00-17:59:59 18:00:00-20:59:59 21:00:00-23:59:59]
@@ -236,19 +230,18 @@ class Report < ApplicationRecord
       t = i.split('-')
       filter[:start_date] = "#{@date} #{t[0]}"
       filter[:stop_date] = "#{@date} #{t[1]}"
-      @search_params = filter.compact_blank!
-      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
+      @inbound_calls = VicidialCloserLog.summary_metrics(filter).first
       data_hash[i] = {
-        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
-        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
-        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
-        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
-        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
-        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
-        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
-        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
-        answered: @inbound_calls['Answered'].to_i.round(0),
-        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
+        min_queue_sec: @inbound_calls[:min_queue_sec].to_i.round(0),
+        avg_queue_sec: @inbound_calls[:avg_queue_sec].to_i.round(0),
+        max_queue_sec: @inbound_calls[:max_queue_sec].to_i.round(0),
+        queued_0_180_count: @inbound_calls[:queued_0_180_count].to_i.round(0),
+        queued_180_360_count: @inbound_calls[:queued_180_360_count].to_i.round(0),
+        queued_360_count: @inbound_calls[:queued_360_count].to_i.round(0),
+        avg_talk_sec: @inbound_calls[:avg_talk_sec].to_i.round(0),
+        total_calls_count: @inbound_calls[:total_calls_count].to_i.round(0),
+        answered_calls_count: @inbound_calls[:answered_calls_count].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls[:answered_calls_count], @inbound_calls[:total_talk_sec])
       }
     end
     @result = data_hash
@@ -257,31 +250,30 @@ class Report < ApplicationRecord
   # По оператору за период
   def operator_by_period(user, filter = params[:filter])
     filter[:operator] = VicidialUser.first.user if filter[:operator].blank?
-    @search_params = filter.compact_blank!
-    @inbound_calls = VicidialCloserLog.operator_calls(@search_params).first
-    @outbound_calls = VicidialLog.operator_calls(@search_params).first
-    @operator_metrics = VicidialAgentLog.agent_metrics(@search_params).first
-    @operator_transfers = VicidialUserCallLog.operator_transfers(@search_params).first
+    @inbound_calls = VicidialCloserLog.operator_calls(filter).first
+    @outbound_calls = VicidialLog.operator_calls(filter).first
+    @operator_metrics = VicidialAgentLog.agent_metrics(filter).first
+    @operator_transfers = VicidialUserCallLog.operator_transfers(filter).first
     data_hash = {
-      user: filter[:operator],
-      answered: @inbound_calls['Answered'].to_i,
-      outbound: @outbound_calls['Outbound'].to_i,
-      talk_m5: @operator_metrics['Talk_m5'].to_i,
-      max_talk: @operator_metrics['Max_talk'].to_i,
-      avg_talk: @operator_metrics['Avg_talk'].to_i,
-      term_by_oper: @inbound_calls['Term_by_oper'],
-      transfer_total: @operator_transfers['Transfer_total'].to_i,
-      transfer_oper: @operator_transfers['Transfer_oper'].to_i,
-      total_time: @operator_metrics['Total_time'],
-      talk_time: @operator_metrics['Talk_time'],
-      pause_time: @operator_metrics['Pause_time'],
-      o_pause: @operator_metrics['O_pause'],
-      pp_pause: @operator_metrics['PP_pause'],
-      og_pause: @operator_metrics['OG_pause'],
-      vd_pause: @operator_metrics['VD_pause'],
-      ed_pause: @operator_metrics['ED_pause'],
-      dispo_time: @operator_metrics['Dispo_time'],
-      effectivity: calc_effectivity(@inbound_calls['Answered'], @operator_metrics['Talk_time'])
+      operator: filter[:operator],
+      answered_calls_count: @inbound_calls[:answered_calls_count].to_i,
+      outbound_calls_count: @outbound_calls[:outbound_calls_count].to_i,
+      talked_300_sec: @operator_metrics[:talked_300_sec].to_i,
+      max_talk_sec: @operator_metrics[:max_talk_sec].to_i,
+      avg_talk_sec: @operator_metrics[:avg_talk_sec].to_i,
+      term_by_oper: @inbound_calls[:term_by_oper],
+      total_transfered_calls: @operator_transfers[:total_transfered_calls].to_i,
+      operator_transfered_calls: @operator_transfers[:operator_transfered_calls].to_i,
+      total_time_sec: @operator_metrics[:total_time_sec],
+      total_talk_sec: @operator_metrics[:total_talk_sec],
+      total_pause_sec: @operator_metrics[:total_pause_sec],
+      o_pause: @operator_metrics[:o_pause],
+      pp_pause: @operator_metrics[:pp_pause],
+      og_pause: @operator_metrics[:og_pause],
+      vd_pause: @operator_metrics[:vd_pause],
+      ed_pause: @operator_metrics[:ed_pause],
+      total_dispo_sec: @operator_metrics[:total_dispo_sec],
+      effectivity: calc_effectivity(@inbound_calls[:answered_calls_count], @operator_metrics[:total_talk_sec])
     }
     @result = data_hash
   end
@@ -291,30 +283,29 @@ class Report < ApplicationRecord
     data_hash = {}
     VicidialUser.all.order(:full_name).each do |operator|
       filter[:operator] = operator.user
-      @search_params = filter.compact_blank!
-      @inbound_calls = VicidialCloserLog.operator_calls(@search_params).first
-      @outbound_calls = VicidialLog.operator_calls(@search_params).first
-      @operator_metrics = VicidialAgentLog.agent_metrics(@search_params).first
-      @operator_transfers = VicidialUserCallLog.operator_transfers(@search_params).first
+      @inbound_calls = VicidialCloserLog.operator_calls(filter).first
+      @outbound_calls = VicidialLog.operator_calls(filter).first
+      @operator_metrics = VicidialAgentLog.agent_metrics(filter).first
+      @operator_transfers = VicidialUserCallLog.operator_transfers(filter).first
       data_hash[operator.user] = {
-        answered: @inbound_calls['Answered'].to_i,
-        outbound: @outbound_calls['Outbound'].to_i,
-        talk_m5: @operator_metrics['Talk_m5'].to_i,
-        max_talk: @operator_metrics['Max_talk'].to_i,
-        avg_talk: @operator_metrics['Avg_talk'].to_i,
-        term_by_oper: @inbound_calls['Term_by_oper'],
-        transfer_total: @operator_transfers['Transfer_total'].to_i,
-        transfer_oper: @operator_transfers['Transfer_oper'].to_i,
-        total_time: @operator_metrics['Total_time'],
-        talk_time: @operator_metrics['Talk_time'],
-        pause_time: @operator_metrics['Pause_time'],
-        o_pause: @operator_metrics['O_pause'],
-        pp_pause: @operator_metrics['PP_pause'],
-        og_pause: @operator_metrics['OG_pause'],
-        vd_pause: @operator_metrics['VD_pause'],
-        ed_pause: @operator_metrics['ED_pause'],
-        dispo_time: @operator_metrics['Dispo_time'],
-        effectivity: calc_effectivity(@inbound_calls['Answered'], @operator_metrics['Talk_time'])
+        answered_calls_count: @inbound_calls[:answered_calls_count].to_i,
+        outbound_calls_count: @outbound_calls[:outbound_calls_count].to_i,
+        talked_300_sec: @operator_metrics[:talked_300_sec].to_i,
+        max_talk_sec: @operator_metrics[:max_talk_sec].to_i,
+        avg_talk_sec: @operator_metrics[:avg_talk_sec].to_i,
+        term_by_oper: @inbound_calls[:term_by_oper],
+        total_transfered_calls: @operator_transfers[:total_transfered_calls].to_i,
+        operator_transfered_calls: @operator_transfers[:operator_transfered_calls].to_i,
+        total_time_sec: @operator_metrics[:total_time_sec],
+        total_talk_sec: @operator_metrics[:total_talk_sec],
+        total_pause_sec: @operator_metrics[:total_pause_sec],
+        o_pause: @operator_metrics[:o_pause],
+        pp_pause: @operator_metrics[:pp_pause],
+        og_pause: @operator_metrics[:og_pause],
+        vd_pause: @operator_metrics[:vd_pause],
+        ed_pause: @operator_metrics[:ed_pause],
+        total_dispo_sec: @operator_metrics[:total_dispo_sec],
+        effectivity: calc_effectivity(@inbound_calls[:answered_calls_count], @operator_metrics[:total_talk_sec])
       }
     end
     @result = data_hash
@@ -323,7 +314,7 @@ class Report < ApplicationRecord
   # Вызовы по часам
   def calls_by_hour(user, filter = params[:filter])
     filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
-    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     @date = filter[:start_date]
     data_hash = {}
     time_intervals = %w[00:00:00-00:59:59 01:00:00-01:59:59 02:00:00-02:59:59
@@ -338,19 +329,18 @@ class Report < ApplicationRecord
       t = i.split('-')
       filter[:start_date] = "#{@date} #{t[0]}"
       filter[:stop_date] = "#{@date} #{t[1]}"
-      @search_params = filter.compact_blank!
-      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
+      @inbound_calls = VicidialCloserLog.summary_metrics(filter).first
       data_hash[i] = {
-        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
-        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
-        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
-        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
-        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
-        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
-        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
-        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
-        answered: @inbound_calls['Answered'].to_i.round(0),
-        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
+        min_queue_sec: @inbound_calls[:min_queue_sec].to_i.round(0),
+        avg_queue_sec: @inbound_calls[:avg_queue_sec].to_i.round(0),
+        max_queue_sec: @inbound_calls[:max_queue_sec].to_i.round(0),
+        queued_0_180_count: @inbound_calls[:queued_0_180_count].to_i.round(0),
+        queued_180_360_count: @inbound_calls[:queued_180_360_count].to_i.round(0),
+        queued_360_count: @inbound_calls[:queued_360_count].to_i.round(0),
+        avg_talk_sec: @inbound_calls[:avg_talk_sec].to_i.round(0),
+        total_calls_count: @inbound_calls[:total_calls_count].to_i.round(0),
+        answered_calls_count: @inbound_calls[:answered_calls_count].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls[:answered_calls_count], @inbound_calls[:total_talk_sec])
       }
     end
     @result = data_hash
@@ -359,7 +349,7 @@ class Report < ApplicationRecord
   # Колл-центр за сутки
   def call_center_24(user, filter = params[:filter])
     filter[:start_date] = filter[:start_date].to_time.beginning_of_day.strftime(date_format)
-    filter[:ingroup] = user.permitted_ingroups.join('\',\'') if filter[:ingroup].blank?
+    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
     @date = filter[:start_date]
     data_hash = {}
     time_intervals = %w[00:00:00-08:59:59 09:00:00-17:59:59 18:00:00-23:59:59]
@@ -367,19 +357,18 @@ class Report < ApplicationRecord
       t = i.split('-')
       filter[:start_date] = "#{@date} #{t[0]}"
       filter[:stop_date] = "#{@date} #{t[1]}"
-      @search_params = filter.compact_blank!
-      @inbound_calls = VicidialCloserLog.summary_metric_by_filter(@search_params).first
+      @inbound_calls = VicidialCloserLog.summary_metrics(filter).first
       data_hash[i] = {
-        min_queue: @inbound_calls['Min_queue'].to_i.round(0),
-        avg_queue: @inbound_calls['Avg_queue'].to_i.round(0),
-        max_queue: @inbound_calls['Max_queue'].to_i.round(0),
-        queue_0_3: @inbound_calls['Queued_03'].to_i.round(0),
-        queue_3_6: @inbound_calls['Queued_36'].to_i.round(0),
-        queue_m6: @inbound_calls['Queued_6'].to_i.round(0),
-        avg_talk: @inbound_calls['Avg_talk'].to_i.round(0),
-        total_calls: @inbound_calls['TotalCalls'].to_i.round(0),
-        answered: @inbound_calls['Answered'].to_i.round(0),
-        effectivity: calc_effectivity(@inbound_calls['Answered'], @inbound_calls['Sum_talk'])
+        min_queue_sec: @inbound_calls[:min_queue_sec].to_i.round(0),
+        avg_queue_sec: @inbound_calls[:avg_queue_sec].to_i.round(0),
+        max_queue_sec: @inbound_calls[:max_queue_sec].to_i.round(0),
+        queued_0_180_count: @inbound_calls[:queued_0_180_count].to_i.round(0),
+        queued_180_360_count: @inbound_calls[:queued_180_360_count].to_i.round(0),
+        queued_360_count: @inbound_calls[:queued_360_count].to_i.round(0),
+        avg_talk_sec: @inbound_calls[:avg_talk_sec].to_i.round(0),
+        total_calls_count: @inbound_calls[:total_calls_count].to_i.round(0),
+        answered_calls_count: @inbound_calls[:answered_calls_count].to_i.round(0),
+        effectivity: calc_effectivity(@inbound_calls[:answered_calls_count], @inbound_calls[:total_talk_sec])
       }
     end
     @result = data_hash

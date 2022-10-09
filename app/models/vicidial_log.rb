@@ -40,53 +40,24 @@ class VicidialLog < Vicidial
     find_by_sql(@query)
   end
 
-  def self.summary_metric_by_filter(search_args)
-    @query = "SELECT
-                COUNT(*) AS OutboundCalls
-              FROM vicidial_log
-              WHERE
-                call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND
-                status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE',
-                'QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND
-                vicidial_log.campaign_id IN
-                ('#{search_args[:campaign]}')"
-    find_by_sql(@query)
-  end
-
   def self.summary_metrics(search_args)
     statuses = %w[DROP XDROP HXFER QVMAIL HOLDTO LIVE QUEUE TIMEOT AFTHRS NANQUE INBND]
     where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:campaign])
       .where.not(status: statuses)
-      .select('COUNT (*) AS outbound_calls_count')
+      .select('COUNT(*) AS outbound_calls_count')
   end
 
-
   def self.statuses_by_user(search_args)
-    @query = "SELECT
-                user,
-                status,
-                count(*) AS count
-              FROM vicidial_log
-              WHERE call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND status NOT IN
-                ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND
-                user != 'VDAD' GROUP BY user, status ORDER BY status"
-    find_by_sql(@query)
+    where(call_date: search_args[:start_date]..search_args[:stop_date])
+      .where.not(status: %w[MAXCAL TIMEOT INCALL DROP DISPO]).where('user != ?', 'VDAD')
+      .select('COUNT(*) AS count', :user, :status)
+      .group(:user, :status)
+      .order(:status)
   end
 
   def self.operator_calls(search_args)
-    @query = "SELECT
-                COUNT(*) AS 'Outbound'
-              FROM vicidial_log
-              WHERE
-                call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND
-                user = '#{search_args[:operator]}'"
-    find_by_sql(@query)
+    where(call_date: search_args[:start_date]..search_args[:stop_date], user: search_args[:operator])
+      .select('COUNT(*) AS outbound_calls_count')
   end
 
 end

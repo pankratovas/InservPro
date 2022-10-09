@@ -40,104 +40,6 @@ class VicidialCloserLog < Vicidial
     find_by_sql(@query)
   end
 
-  def self.summary_metric_by_filter(search_args)
-    @query = "SELECT
-                count(*) AS TotalCalls,
-                SUM(length_in_sec) AS 'TotalLength',
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
-                SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
-                MAX(queue_seconds) AS Max_queue,
-                AVG(queue_seconds) AS Avg_queue,
-                MIN(queue_seconds) AS Min_queue,
-                AVG(length_in_sec - queue_seconds) AS 'Avg_talk',
-                SUM(length_in_sec - queue_seconds) AS 'Sum_talk',
-                SUM(IF(queue_seconds BETWEEN 0 AND 180, 1,0)) AS 'Queued_03',
-                SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS 'Queued_36',
-                SUM(IF(queue_seconds > 360, 1,0)) AS 'Queued_6',
-                SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime'
-              FROM vicidial_closer_log
-              WHERE
-                vicidial_closer_log.call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND status NOT IN ('MAXCAL','TIMEOT') AND
-                vicidial_closer_log.campaign_id IN
-                ('#{search_args[:ingroup]}')"
-    find_by_sql(@query)
-  end
-
-  def self.day_calls(search_args)
-    @query = "SELECT
-                count(*) AS TotalCalls,
-                SUM(length_in_sec) AS 'TotalLength',
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL',
-                                      'HOLDTO','LIVE','QUEUE','TIMEOT',
-                                      'AFTHRS','NANQUE','INBND'),1,0)) as 'Answered',
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL',
-                                      'HOLDTO','LIVE','QUEUE','TIMEOT',
-                                      'AFTHRS','NANQUE','INBND') AND queue_seconds < 20.0,1,0)) as 'Answered20',
-                SUM(IF(queue_seconds > 0, 1,0)) AS 'Queued',
-                MAX(queue_seconds) AS Max_queue,
-                MIN(queue_seconds) AS Min_queue,
-                SUM(IF(queue_seconds > 0, queue_seconds,0)) AS 'QueueTime'
-              FROM vicidial_closer_log
-              WHERE
-                call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND
-                status NOT IN ('MAXCAL','TIMEOT') AND
-                vicidial_closer_log.campaign_id IN
-                ('#{search_args[:ingroup]}')"
-    find_by_sql(@query)
-  end
-
-  def self.interval_calls(search_args)
-    @query = "SELECT
-                count(*) AS TotalCalls,
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL',
-                                      'HOLDTO','LIVE','QUEUE','TIMEOT',
-                                      'AFTHRS','NANQUE','INBND'),1,0)) as 'Answered'
-              FROM vicidial_closer_log
-              WHERE
-                call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND
-                status NOT IN ('MAXCAL','TIMEOT') AND
-                vicidial_closer_log.campaign_id IN
-                ('#{search_args[:ingroup]}')"
-    find_by_sql(@query)
-  end
-
-  def self.statuses_by_user(search_args)
-    @query = "SELECT
-                user,
-                status,
-                count(*) AS count
-              FROM vicidial_closer_log
-              WHERE call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND status NOT IN
-                ('MAXCAL','TIMEOT','INCALL','DROP', 'DISPO') AND
-                user != 'VDCL' GROUP BY user, status ORDER BY status"
-    find_by_sql(@query)
-  end
-
-  def self.operator_calls(search_args)
-    @query = "SELECT
-                SUM(IF(status NOT IN ('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'),1,0)) AS 'Answered',
-                SUM(IF(term_reason = 'AGENT',1,0)) AS 'Term_by_oper'
-              FROM
-                vicidial_closer_log
-              WHERE
-                call_date BETWEEN
-                '#{search_args[:start_date]}' AND
-                '#{search_args[:stop_date]}' AND
-                status NOT IN ('MAXCAL','TIMEOT') AND
-                user = '#{search_args[:operator]}'"
-    find_by_sql(@query)
-  end
-
-
   def self.summary_metrics(search_args)
     statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
     where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:ingroup])
@@ -155,6 +57,45 @@ class VicidialCloserLog < Vicidial
               'SUM(IF(queue_seconds BETWEEN 180 AND 360, 1,0)) AS queued_180_360_count',
               'SUM(IF(queue_seconds > 360, 1,0)) AS queued_360_count',
               'SUM(IF(queue_seconds > 0, queue_seconds,0)) AS total_queue_sec')
+  end
+
+  def self.day_calls(search_args)
+    statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
+    where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:ingroup])
+      .where.not(status: %w[MAXCAL TIMEOT])
+      .select('COUNT(*) AS total_calls_count',
+              'SUM(length_in_sec) AS total_length_sec',
+              "SUM(IF(status NOT IN (#{statuses}),1,0)) as answered_calls_count",
+              "SUM(IF(status NOT IN (#{statuses}) AND queue_seconds < 20.0,1,0)) AS answered_20_calls_count",
+              'SUM(IF(queue_seconds > 0, 1,0)) AS queued_calls_count',
+              'MAX(queue_seconds) AS max_queue_sec',
+              'AVG(queue_seconds) AS avg_queue_sec',
+              'MIN(queue_seconds) AS min_queue_sec',
+              'SUM(IF(queue_seconds > 0, queue_seconds,0)) AS total_queue_sec')
+  end
+
+  def self.interval_calls(search_args)
+    statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
+    where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:ingroup])
+      .where.not(status: %w[MAXCAL TIMEOT])
+      .select('COUNT(*) AS total_calls_count',
+              "SUM(IF(status NOT IN (#{statuses}),1,0)) as answered_calls_count")
+  end
+
+  def self.statuses_by_user(search_args)
+    where(call_date: search_args[:start_date]..search_args[:stop_date])
+      .where.not(status: %w[MAXCAL TIMEOT INCALL DROP DISPO]).where('user != ?', 'VDCL')
+      .select('COUNT(*) AS count', :user, :status)
+      .group(:user, :status)
+      .order(:status)
+  end
+
+  def self.operator_calls(search_args)
+    statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
+    where(call_date: search_args[:start_date]..search_args[:stop_date], user: search_args[:operator])
+      .where.not(status: %w[MAXCAL TIMEOT])
+      .select("SUM(IF(status NOT IN (#{statuses}),1,0)) AS answered_calls_count",
+              "SUM(IF(term_reason = 'AGENT',1,0)) AS term_by_operator")
   end
 
 end

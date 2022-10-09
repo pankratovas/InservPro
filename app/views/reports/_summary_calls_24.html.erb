@@ -11,73 +11,73 @@
   <tbody>
     <tr>
       <td><%= t(:min_wait) %></td>
-      <td><%= seconds_to_ms(@result[15][:min_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[30][:min_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[60][:min_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[1440][:min_queue_length]) %></td>
+      <td><%= seconds_to_ms(@result[15][:min_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[30][:min_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[60][:min_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[1440][:min_queue_sec]) %></td>
     </tr>
     <tr>
       <td><%= t(:avg_wait) %></td>
-      <td><%= seconds_to_ms(@result[15][:avg_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[30][:avg_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[60][:avg_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[1440][:avg_queue_length]) %></td>
+      <td><%= seconds_to_ms(@result[15][:avg_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[30][:avg_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[60][:avg_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[1440][:avg_queue_sec]) %></td>
     </tr>
     <tr>
       <td><%= t(:max_wait) %></td>
-      <td><%= seconds_to_ms(@result[15][:max_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[30][:max_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[60][:max_queue_length]) %></td>
-      <td><%= seconds_to_ms(@result[1440][:max_queue_length]) %></td>
+      <td><%= seconds_to_ms(@result[15][:max_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[30][:max_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[60][:max_queue_sec]) %></td>
+      <td><%= seconds_to_ms(@result[1440][:max_queue_sec]) %></td>
     </tr>
     <tr>
       <td><%= t(:wait) %> 0-3 <%= t(:minutes) %></td>
-      <td><%= @result[15][:queue_0_3] %> ед.</td>
-      <td><%= @result[30][:queue_0_3] %> ед.</td>
-      <td><%= @result[60][:queue_0_3] %> ед.</td>
-      <td><%= @result[1440][:queue_0_3] %> ед.</td>
+      <td><%= @result[15][:queued_0_180_count] %> ед.</td>
+      <td><%= @result[30][:queued_0_180_count] %> ед.</td>
+      <td><%= @result[60][:queued_0_180_count] %> ед.</td>
+      <td><%= @result[1440][:queued_0_180_count] %> ед.</td>
     </tr>
     <tr>
       <td><%= t(:wait) %> 3-6 <%= t(:minutes) %></td>
-      <td><%= @result[15][:queue_3_6] %> ед.</td>
-      <td><%= @result[30][:queue_3_6] %> ед.</td>
-      <td><%= @result[60][:queue_3_6] %> ед.</td>
-      <td><%= @result[1440][:queue_3_6] %> ед.</td>
+      <td><%= @result[15][:queued_0_360_count] %> ед.</td>
+      <td><%= @result[30][:queued_0_360_count] %> ед.</td>
+      <td><%= @result[60][:queued_0_360_count] %> ед.</td>
+      <td><%= @result[1440][:queued_0_360_count] %> ед.</td>
     </tr>
     <tr>
       <td><%= t(:wait) %> <%= t(:more_6_min) %></td>
-      <td><%= @result[15][:queue_6] %> ед.</td>
-      <td><%= @result[30][:queue_6] %> ед.</td>
-      <td><%= @result[60][:queue_6] %> ед.</td>
-      <td><%= @result[1440][:queue_6] %> ед.</td>
+      <td><%= @result[15][:queued_306_count] %> ед.</td>
+      <td><%= @result[30][:queued_306_count] %> ед.</td>
+      <td><%= @result[60][:queued_306_count] %> ед.</td>
+      <td><%= @result[1440][:queued_306_count] %> ед.</td>
     </tr>
     <tr>
       <td><%= t(:talk) %></td>
-      <td><%= seconds_to_ms(@result[15][:avg_total_length]) %></td>
-      <td><%= seconds_to_ms(@result[30][:avg_total_length]) %></td>
-      <td><%= seconds_to_ms(@result[60][:avg_total_length]) %></td>
-      <td><%= seconds_to_ms(@result[1440][:avg_total_length]) %></td>
+      <td><%= seconds_to_ms(@result[15][:avg_total_sec]) %></td>
+      <td><%= seconds_to_ms(@result[30][:avg_total_sec]) %></td>
+      <td><%= seconds_to_ms(@result[60][:avg_total_sec]) %></td>
+      <td><%= seconds_to_ms(@result[1440][:avg_total_sec]) %></td>
     </tr>
     <tr>
       <td><%= t(:amount_inbound_calls) %></td>
-      <td><%= @result[15][:total_calls] %> ед.</td>
-      <td><%= @result[30][:total_calls] %> ед.</td>
-      <td><%= @result[60][:total_calls] %> ед.</td>
-      <td><%= @result[1440][:total_calls] %> ед.</td>
+      <td><%= @result[15][:total_calls_count] %> ед.</td>
+      <td><%= @result[30][:total_calls_count] %> ед.</td>
+      <td><%= @result[60][:total_calls_count] %> ед.</td>
+      <td><%= @result[1440][:total_calls_count] %> ед.</td>
     </tr>
     <tr>
       <td><%= t(:answered_calls) %></td>
-      <td><%= @result[15][:answered_calls] %> ед.</td>
-      <td><%= @result[30][:answered_calls] %> ед.</td>
-      <td><%= @result[60][:answered_calls] %> ед.</td>
-      <td><%= @result[1440][:answered_calls] %> ед.</td>
+      <td><%= @result[15][:answered_calls_count] %> ед.</td>
+      <td><%= @result[30][:answered_calls_count] %> ед.</td>
+      <td><%= @result[60][:answered_calls_count] %> ед.</td>
+      <td><%= @result[1440][:answered_calls_count] %> ед.</td>
     </tr>
     <tr>
-      <td><%= t(:amount_outbound_calss) %></td>
-      <td><%= @result[15][:outbound] %> ед.</td>
-      <td><%= @result[30][:outbound] %> ед.</td>
-      <td><%= @result[60][:outbound] %> ед.</td>
-      <td><%= @result[1440][:outbound] %> ед.</td>
+      <td><%= t(:amount_outbound_calls) %></td>
+      <td><%= @result[15][:outbound_calls_count] %> ед.</td>
+      <td><%= @result[30][:outbound_calls_count] %> ед.</td>
+      <td><%= @result[60][:outbound_calls_count] %> ед.</td>
+      <td><%= @result[1440][:outbound_calls_count] %> ед.</td>
     </tr>
     <tr>
       <td><%= t(:effectivity) %></td>
