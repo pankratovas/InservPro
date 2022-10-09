@@ -40,6 +40,22 @@ class VicidialCloserLog < Vicidial
     find_by_sql(@query)
   end
 
+  def self.inbound_by_regions(search_args)
+    @order_query = ' GROUP BY region_name ORDER BY campaign_id, region_name'
+    @query = "SELECT
+                t1.campaign_id,
+                COUNT(*) as count,
+                t3.region_name
+              FROM vicidial_closer_log t1
+              JOIN vicidial_list t2 on t1.lead_id= t2.lead_id
+              LEFT JOIN dict_regions t3 on t2.state=t3.id
+              WHERE
+                t1.call_date BETWEEN
+                '#{search_args[:start_date]}' AND
+                '#{search_args[:stop_date]}'" + @order_query
+    find_by_sql(@query)
+  end
+
   def self.summary_metrics(search_args)
     statuses = "'DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND'"
     where(call_date: search_args[:start_date]..search_args[:stop_date], campaign_id: search_args[:ingroup])

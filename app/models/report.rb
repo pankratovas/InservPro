@@ -394,30 +394,8 @@ class Report < ApplicationRecord
     data
   end
 
-
-
-  # Вызовы по регионам !!!!!!!!! только ФСС
   def calls_by_regions(user, filter = params[:filter])
-    @start_date = if filter.blank? || filter[:start_date].blank?
-      Time.now.beginning_of_day.strftime(date_time_format)
-    else
-      filter[:start_date]
-                  end
-    @stop_date = if filter.blank? || filter[:stop_date].blank?
-      Time.now.end_of_day.strftime(date_time_format)
-    else
-      filter[:stop_date]
-                 end
-    @order_query = " GROUP BY region_name ORDER BY campaign_id, region_name"
-    @query = "SELECT t1.campaign_id,
-                     COUNT(*) as count,
-                     t3.region_name
-              FROM vicidial_closer_log t1
-              JOIN vicidial_list t2 on t1.lead_id= t2.lead_id left
-              JOIN dict_regions t3 on t2.state=t3.id
-              WHERE t1.call_date BETWEEN '#{@start_date}' AND '#{@stop_date}'"+@order_query
-    @result = VicidialCloserLog.find_by_sql(@query)
-    return @result
+    @result = VicidialCloserLog.inbound_by_regions(filter)
   end
 
   # Статусы по регионам !!!!!!!!!!! только ФСС
