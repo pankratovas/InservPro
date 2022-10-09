@@ -92,20 +92,22 @@ module ReportsHelper
 
   def available_campaigns(user)
     VicidialCampaign.where(campaign_id: user.role.permissions['campaigns'])
-                    .order(:campaign_name).collect { |vc| [vc[:campaign_name], vc[:campaign_id]] }
+                    .order(:campaign_name)
+                    .collect { |vc| ["#{vc[:campaign_name]} (#{vc[:campaign_id]})", vc[:campaign_id]] }
   end
 
   def available_ingroups(user)
     VicidialInboundGroup.where(group_id: user.role.permissions['ingroups'])
-                        .order(:group_name).collect { |vig| [vig[:group_name], vig[:group_id]] }
+                        .order(:group_name)
+                        .collect { |vg| ["#{vg[:group_name]} (#{vg[:group_id]})", vg[:group_id]] }
   end
 
   def available_operators
-    VicidialUser.all.order(:full_name).collect { |vu| ["#{vu[:full_name]} (#{vu[:user]})", vu[:user]] }
+    VicidialUser.all.order(:full_name).collect { |vu| ["#{vu[:user]} - #{vu[:full_name]}", vu[:user]] }
   end
 
   def available_statuses(user)
-    (VicidialCampaignStatus.where(campaign_id: user.role.permissions[:campaigns])
+    (VicidialCampaignStatus.where(campaign_id: user.role.permissions['campaigns'])
                            .select(:status_name, :status).order(:status_name) +
       VicidialStatus.select(:status_name, :status)
                     .order(:status_name)).map { |s| ["#{s[:status_name]} (#{s[:status]})", s[:status]] }

@@ -2,8 +2,7 @@ class Report < ApplicationRecord
 
   # TEST
   def test_report(user, filter = params[:filter])
-    filter[:ingroup] = user.permitted_ingroups if filter[:ingroup].blank?
-    @inbound_calls = VicidialCloserLog.get_metrics(filter).first
+    filter
   end
 
 
